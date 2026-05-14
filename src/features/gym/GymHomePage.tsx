@@ -20,6 +20,13 @@ type NewClientForm = {
   enrolledAt: string;
 };
 
+type DemoMemberCard = {
+  name: string;
+  plan: string;
+  enrolledAt: string;
+  nextPaymentDate: string;
+};
+
 const TODAY = "2026-05-14";
 
 const initialClients: Client[] = [
@@ -65,6 +72,13 @@ const initialForm: NewClientForm = {
   name: "",
   cedula: "",
   enrolledAt: TODAY
+};
+
+const demoMemberCard: DemoMemberCard = {
+  name: "Anita",
+  plan: "Pase libre",
+  enrolledAt: "2026-03-14",
+  nextPaymentDate: "2026-05-19"
 };
 
 function parseLocalDate(value: string) {
@@ -120,6 +134,7 @@ export function GymHomePage() {
   const [newClient, setNewClient] = useState(initialForm);
   const [kioskInput, setKioskInput] = useState("");
   const [kioskResult, setKioskResult] = useState("Todavia no hubo ingresos marcados.");
+  const [kioskMember, setKioskMember] = useState<DemoMemberCard | null>(null);
   const [activeTab, setActiveTab] = useState<GymTab>("panel");
   const nextIdRef = useRef(100);
 
@@ -168,19 +183,31 @@ export function GymHomePage() {
       return;
     }
 
-    const selectedClient = clients.find((client) => client.cedula === normalizedCedula);
-    if (!selectedClient) {
-      setKioskResult("No encontramos esa cedula.");
+    setClients((current) =>
+      current.map((client) =>
+        client.id === "c-001" ? { ...client, lastVisitAt: `${TODAY}T08:45:00` } : client
+      )
+    );
+    setKioskMember(demoMemberCard);
+    setKioskResult(`Bienvenida ${demoMemberCard.name}. Ingreso marcado correctamente.`);
+  }
+
+  function appendDigit(digit: string) {
+    if (kioskInput.length >= 8) {
       return;
     }
 
-    setClients((current) =>
-      current.map((client) =>
-        client.cedula === normalizedCedula ? { ...client, lastVisitAt: `${TODAY}T08:45:00` } : client
-      )
-    );
-    setKioskResult(`${selectedClient.name} marco ingreso correctamente.`);
+    setKioskInput((current) => current + digit);
+  }
+
+  function removeDigit() {
+    setKioskInput((current) => current.slice(0, -1));
+  }
+
+  function clearKiosk() {
     setKioskInput("");
+    setKioskMember(null);
+    setKioskResult("Todavia no hubo ingresos marcados.");
   }
 
   return (
@@ -304,17 +331,49 @@ export function GymHomePage() {
             </div>
 
             <div className="kiosk-simple">
-              <input
-                value={kioskInput}
-                onChange={(event) => setKioskInput(event.target.value)}
-                placeholder="Escribi la cedula"
-                inputMode="numeric"
-              />
+              <div className="kiosk-display">
+                <span>Cedula</span>
+                <strong>{kioskInput || "--------"}</strong>
+              </div>
+
+              <div className="keypad-grid">
+                {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((digit) => (
+                  <button key={digit} type="button" className="keypad-button" onClick={() => appendDigit(digit)}>
+                    {digit}
+                  </button>
+                ))}
+                <button type="button" className="keypad-button keypad-button--muted" onClick={clearKiosk}>
+                  Limpiar
+                </button>
+                <button type="button" className="keypad-button" onClick={() => appendDigit("0")}>
+                  0
+                </button>
+                <button type="button" className="keypad-button keypad-button--muted" onClick={removeDigit}>
+                  Borrar
+                </button>
+              </div>
+
               <button type="button" className="button button--solid button--full" onClick={handleKioskSubmit}>
                 Marcar ingreso
               </button>
               <p>{kioskResult}</p>
             </div>
+
+            {kioskMember ? (
+              <article className="member-card">
+                <div className="member-card__media" />
+                <div className="member-card__body">
+                  <span className="member-card__eyebrow">Socio activo</span>
+                  <h3>Bienvenida {kioskMember.name}</h3>
+                  <div className="member-card__info">
+                    <span>Plan: {kioskMember.plan}</span>
+                    <span>Ingreso: {formatDate(kioskMember.enrolledAt)}</span>
+                    <span>Proximo pago: {formatDate(kioskMember.nextPaymentDate)}</span>
+                    <span>Le quedan {diffDays(TODAY, kioskMember.nextPaymentDate)} dias para abonar</span>
+                  </div>
+                </div>
+              </article>
+            ) : null}
           </article>
         </section>
       )}

@@ -248,6 +248,49 @@ a {
   background: #fff;
 }
 
+.kiosk-display {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #f9fafb;
+  display: grid;
+  gap: 6px;
+}
+
+.kiosk-display span,
+.member-card__eyebrow {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.kiosk-display strong {
+  font-size: 2rem;
+  letter-spacing: 0.08em;
+}
+
+.keypad-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.keypad-button {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  min-height: 72px;
+  background: #ffffff;
+  font-size: 1.3rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.keypad-button--muted {
+  background: #f3f4f6;
+  font-size: 0.95rem;
+}
+
 .button {
   border: 0;
   border-radius: 12px;
@@ -263,6 +306,40 @@ a {
 
 .button--full {
   width: 100%;
+}
+
+.member-card {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: #f9fafb;
+}
+
+.member-card__media {
+  border-radius: 14px;
+  background:
+    linear-gradient(135deg, #e5e7eb, #f3f4f6);
+  min-height: 140px;
+}
+
+.member-card__body {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+
+.member-card__body h3 {
+  margin: 0;
+  font-size: 1.45rem;
+}
+
+.member-card__info {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
 }
 
 @media (max-width: 860px) {
@@ -293,5 +370,13 @@ a {
 
   .table-status {
     justify-self: start;
+  }
+
+  .member-card {
+    grid-template-columns: 1fr;
+  }
+
+  .member-card__media {
+    min-height: 180px;
   }
 }
