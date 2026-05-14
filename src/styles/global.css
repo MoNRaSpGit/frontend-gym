@@ -218,6 +218,33 @@ a {
   display: grid;
 }
 
+.collections-layout,
+.collections-list {
+  display: grid;
+  gap: 20px;
+}
+
+.collection-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  border: 1px solid #eceff3;
+  background: #fafbfc;
+  border-radius: 14px;
+}
+
+.collection-main {
+  display: grid;
+  gap: 4px;
+}
+
+.collection-main span,
+.empty-copy {
+  color: var(--muted);
+}
+
 .movement-list {
   display: grid;
   gap: 10px;

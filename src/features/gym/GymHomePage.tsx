@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 
 type ClientStatus = "up_to_date" | "upcoming" | "due";
-type GymTab = "panel" | "ingresar";
+type GymTab = "panel" | "cobros" | "ingresar";
 
 type Client = {
   id: string;
@@ -229,6 +229,20 @@ export function GymHomePage() {
     return [...activeClients].sort((left, right) => diffDays(TODAY, left.nextPaymentDate) - diffDays(TODAY, right.nextPaymentDate));
   }, [activeClients]);
 
+  const collectionsSummary = useMemo(() => {
+    const dueToday = activeClients.filter((client) => diffDays(TODAY, client.nextPaymentDate) <= 0);
+    const dueSoon = activeClients.filter((client) => {
+      const daysLeft = diffDays(TODAY, client.nextPaymentDate);
+      return daysLeft > 0 && daysLeft <= 7;
+    });
+
+    return {
+      dueToday,
+      dueSoon,
+      total: dueToday.length + dueSoon.length
+    };
+  }, [activeClients]);
+
   const selectedClient = useMemo(
     () => clients.find((client) => client.id === selectedClientId) ?? null,
     [clients, selectedClientId]
@@ -335,6 +349,10 @@ export function GymHomePage() {
     );
   }
 
+  function handleQuickPayment(clientId: string) {
+    handleClientPayment(clientId);
+  }
+
   return (
     <main className="gym-shell">
       <section className="hero-simple">
@@ -356,6 +374,13 @@ export function GymHomePage() {
               onClick={() => setActiveTab("panel")}
             >
               Panel
+            </button>
+            <button
+              type="button"
+              className={`tab-button ${activeTab === "cobros" ? "tab-button--active" : ""}`}
+              onClick={() => setActiveTab("cobros")}
+            >
+              Cobros
             </button>
             <button
               type="button"
@@ -384,6 +409,25 @@ export function GymHomePage() {
             <div className="summary-box">
               <strong>{summary.checkedInToday}</strong>
               <span>Ingresaron hoy</span>
+            </div>
+          </div>
+        ) : activeTab === "cobros" ? (
+          <div className="summary-row">
+            <div className="summary-box">
+              <strong>{collectionsSummary.dueToday.length}</strong>
+              <span>Vencen hoy</span>
+            </div>
+            <div className="summary-box">
+              <strong>{collectionsSummary.dueSoon.length}</strong>
+              <span>Vencen en 7 dias</span>
+            </div>
+            <div className="summary-box">
+              <strong>{collectionsSummary.total}</strong>
+              <span>Para cobrar</span>
+            </div>
+            <div className="summary-box">
+              <strong>{formatDate(TODAY)}</strong>
+              <span>Corte actual</span>
             </div>
           </div>
         ) : null}
@@ -479,6 +523,50 @@ export function GymHomePage() {
             </article>
           </section>
         </>
+      ) : activeTab === "cobros" ? (
+        <section className="collections-layout">
+          <article className="panel">
+            <div className="panel__header">
+              <h2>Cobros de hoy</h2>
+            </div>
+
+            <div className="collections-list">
+              {collectionsSummary.dueToday.map((client) => (
+                <div className="collection-row" key={client.id}>
+                  <div className="collection-main">
+                    <strong>{client.name}</strong>
+                    <span>Vence {formatDate(client.nextPaymentDate)}</span>
+                  </div>
+                  <button type="button" className="button button--solid" onClick={() => handleQuickPayment(client.id)}>
+                    Registrar pago
+                  </button>
+                </div>
+              ))}
+              {collectionsSummary.dueToday.length === 0 ? <p className="empty-copy">No hay clientes venciendo hoy.</p> : null}
+            </div>
+          </article>
+
+          <article className="panel">
+            <div className="panel__header">
+              <h2>Proximos vencimientos</h2>
+            </div>
+
+            <div className="collections-list">
+              {collectionsSummary.dueSoon.map((client) => (
+                <div className="collection-row" key={client.id}>
+                  <div className="collection-main">
+                    <strong>{client.name}</strong>
+                    <span>Vence {formatDate(client.nextPaymentDate)}</span>
+                  </div>
+                  <button type="button" className="button button--ghost" onClick={() => setSelectedClientId(client.id)}>
+                    Ver ficha
+                  </button>
+                </div>
+              ))}
+              {collectionsSummary.dueSoon.length === 0 ? <p className="empty-copy">No hay vencimientos cercanos.</p> : null}
+            </div>
+          </article>
+        </section>
       ) : (
         <section className="kiosk-page">
           {!kioskMember ? (
