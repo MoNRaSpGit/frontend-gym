@@ -17,12 +17,10 @@ type Client = {
   lastVisitAt: string | null;
 };
 
-type ClientPlan = "Plan estandar" | "Plan 3 meses" | "Plan 6 meses";
-
 type NewClientForm = {
   name: string;
   cedula: string;
-  plan: ClientPlan;
+  plan: string;
   enrolledAt: string;
 };
 
@@ -332,11 +330,7 @@ export function GymHomePage() {
     setKioskCountdown(12);
   }
 
-  function handleClientPlanChange(clientId: string, plan: ClientPlan) {
-    setClients((current) => current.map((client) => (client.id === clientId ? { ...client, plan } : client)));
-  }
-
-  function handleClientPayment(clientId: string) {
+  function handleQuickPayment(clientId: string) {
     setClients((current) =>
       current.map((client) =>
         client.id === clientId
@@ -347,10 +341,6 @@ export function GymHomePage() {
           : client
       )
     );
-  }
-
-  function handleQuickPayment(clientId: string) {
-    handleClientPayment(clientId);
   }
 
   return (
@@ -487,7 +477,7 @@ export function GymHomePage() {
                 />
                 <select
                   value={newClient.plan}
-                  onChange={(event) => setNewClient((current) => ({ ...current, plan: event.target.value as ClientPlan }))}
+                  onChange={(event) => setNewClient((current) => ({ ...current, plan: event.target.value }))}
                 >
                   <option>Plan estandar</option>
                   <option>Plan 3 meses</option>
@@ -660,29 +650,14 @@ export function GymHomePage() {
                 <span>Cedula: {selectedClient.cedula}</span>
                 <span>Telefono: {selectedClient.phone}</span>
                 <span>Direccion: {selectedClient.address}</span>
+                <span>Plan: {selectedClient.plan}</span>
                 <span>Ingreso: {formatDate(selectedClient.enrolledAt)}</span>
                 <span>Proximo pago: {formatDate(selectedClient.nextPaymentDate)}</span>
                 <span>{getPaymentText(selectedClient.nextPaymentDate)}</span>
               </div>
-              <label className="plan-field">
-                <span>Plan</span>
-                <select
-                  value={selectedClient.plan}
-                  onChange={(event) => handleClientPlanChange(selectedClient.id, event.target.value as ClientPlan)}
-                >
-                  <option>Plan estandar</option>
-                  <option>Plan 3 meses</option>
-                  <option>Plan 6 meses</option>
-                </select>
-              </label>
-              <div className="client-modal-actions">
-                <button type="button" className="button button--solid" onClick={() => handleClientPayment(selectedClient.id)}>
-                  Pago
-                </button>
-                <button type="button" className="button button--ghost" onClick={() => setSelectedClientId(null)}>
-                  Cerrar ficha
-                </button>
-              </div>
+              <button type="button" className="button button--ghost button--full" onClick={() => setSelectedClientId(null)}>
+                Cerrar ficha
+              </button>
             </div>
           </article>
         </div>
