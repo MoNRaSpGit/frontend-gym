@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 
 type ClientStatus = "up_to_date" | "upcoming" | "due";
+type GymTab = "panel" | "ingresar";
 
 type Client = {
   id: string;
@@ -119,6 +120,7 @@ export function GymHomePage() {
   const [newClient, setNewClient] = useState(initialForm);
   const [kioskInput, setKioskInput] = useState("");
   const [kioskResult, setKioskResult] = useState("Todavia no hubo ingresos marcados.");
+  const [activeTab, setActiveTab] = useState<GymTab>("panel");
   const nextIdRef = useRef(100);
 
   const activeClients = useMemo(() => clients.filter((client) => client.active), [clients]);
@@ -184,90 +186,119 @@ export function GymHomePage() {
   return (
     <main className="gym-shell">
       <section className="hero-simple">
-        <div>
-          <span className="eyebrow">Gym</span>
-          <h1>Panel de control</h1>
-          <p>Vista simple para ver clientes, fecha de ingreso y estado de cuota.</p>
+        <div className="hero-top">
+          <div>
+            <span className="eyebrow">Gym</span>
+            <h1>{activeTab === "panel" ? "Panel de control" : "Ingresar"}</h1>
+            <p>
+              {activeTab === "panel"
+                ? "Vista simple para ver clientes, fecha de ingreso y estado de cuota."
+                : "Pantalla separada para recepcion y marcado de ingreso por cedula."}
+            </p>
+          </div>
+
+          <nav className="tabs" aria-label="Secciones gym">
+            <button
+              type="button"
+              className={`tab-button ${activeTab === "panel" ? "tab-button--active" : ""}`}
+              onClick={() => setActiveTab("panel")}
+            >
+              Panel
+            </button>
+            <button
+              type="button"
+              className={`tab-button ${activeTab === "ingresar" ? "tab-button--active" : ""}`}
+              onClick={() => setActiveTab("ingresar")}
+            >
+              Ingresar
+            </button>
+          </nav>
         </div>
 
-        <div className="summary-row">
-          <div className="summary-box">
-            <strong>{activeClients.length}</strong>
-            <span>Clientes</span>
+        {activeTab === "panel" ? (
+          <div className="summary-row">
+            <div className="summary-box">
+              <strong>{activeClients.length}</strong>
+              <span>Clientes</span>
+            </div>
+            <div className="summary-box">
+              <strong>{summary.due}</strong>
+              <span>Rojo</span>
+            </div>
+            <div className="summary-box">
+              <strong>{summary.upcoming}</strong>
+              <span>Amarillo</span>
+            </div>
+            <div className="summary-box">
+              <strong>{summary.checkedInToday}</strong>
+              <span>Ingresaron hoy</span>
+            </div>
           </div>
-          <div className="summary-box">
-            <strong>{summary.due}</strong>
-            <span>Rojo</span>
-          </div>
-          <div className="summary-box">
-            <strong>{summary.upcoming}</strong>
-            <span>Amarillo</span>
-          </div>
-          <div className="summary-box">
-            <strong>{summary.checkedInToday}</strong>
-            <span>Ingresaron hoy</span>
-          </div>
-        </div>
+        ) : null}
       </section>
 
-      <section className="layout-simple">
-        <article className="panel panel--main">
-          <div className="panel__header">
-            <h2>Clientes</h2>
-          </div>
-
-          <div className="table-head">
-            <span>Cliente</span>
-            <span>Fecha de ingreso</span>
-            <span className="table-head__right">Estado</span>
-          </div>
-
-          <div className="clients-table">
-            {sortedClients.map((client) => {
-              const status = getClientStatus(client.nextPaymentDate);
-
-              return (
-                <div className="table-row" key={client.id}>
-                  <strong>{client.name}</strong>
-                  <span>{formatDate(client.enrolledAt)}</span>
-                  <div className="table-status">
-                    <span className={`status-pill status-pill--${status}`}>{getStatusLabel(status)}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </article>
-
-        <aside className="side-stack">
-          <article className="panel">
+      {activeTab === "panel" ? (
+        <section className="layout-simple">
+          <article className="panel panel--main">
             <div className="panel__header">
-              <h2>Nuevo cliente</h2>
+              <h2>Clientes</h2>
             </div>
 
-            <form className="simple-form" onSubmit={handleAddClient}>
-              <input
-                value={newClient.name}
-                onChange={(event) => setNewClient((current) => ({ ...current, name: event.target.value }))}
-                placeholder="Nombre"
-              />
-              <input
-                value={newClient.cedula}
-                onChange={(event) => setNewClient((current) => ({ ...current, cedula: event.target.value }))}
-                placeholder="Cedula"
-              />
-              <input
-                type="date"
-                value={newClient.enrolledAt}
-                onChange={(event) => setNewClient((current) => ({ ...current, enrolledAt: event.target.value }))}
-              />
-              <button type="submit" className="button button--solid button--full">
-                Agregar
-              </button>
-            </form>
+            <div className="table-head">
+              <span>Cliente</span>
+              <span>Fecha de ingreso</span>
+              <span className="table-head__right">Estado</span>
+            </div>
+
+            <div className="clients-table">
+              {sortedClients.map((client) => {
+                const status = getClientStatus(client.nextPaymentDate);
+
+                return (
+                  <div className="table-row" key={client.id}>
+                    <strong>{client.name}</strong>
+                    <span>{formatDate(client.enrolledAt)}</span>
+                    <div className="table-status">
+                      <span className={`status-pill status-pill--${status}`}>{getStatusLabel(status)}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </article>
 
-          <article className="panel">
+          <aside className="side-stack">
+            <article className="panel">
+              <div className="panel__header">
+                <h2>Nuevo cliente</h2>
+              </div>
+
+              <form className="simple-form" onSubmit={handleAddClient}>
+                <input
+                  value={newClient.name}
+                  onChange={(event) => setNewClient((current) => ({ ...current, name: event.target.value }))}
+                  placeholder="Nombre"
+                />
+                <input
+                  value={newClient.cedula}
+                  onChange={(event) => setNewClient((current) => ({ ...current, cedula: event.target.value }))}
+                  placeholder="Cedula"
+                />
+                <input
+                  type="date"
+                  value={newClient.enrolledAt}
+                  onChange={(event) => setNewClient((current) => ({ ...current, enrolledAt: event.target.value }))}
+                />
+                <button type="submit" className="button button--solid button--full">
+                  Agregar
+                </button>
+              </form>
+            </article>
+          </aside>
+        </section>
+      ) : (
+        <section className="kiosk-page">
+          <article className="panel panel--kiosk">
             <div className="panel__header">
               <h2>Ingreso por cedula</h2>
             </div>
@@ -285,8 +316,8 @@ export function GymHomePage() {
               <p>{kioskResult}</p>
             </div>
           </article>
-        </aside>
-      </section>
+        </section>
+      )}
     </main>
   );
 }
