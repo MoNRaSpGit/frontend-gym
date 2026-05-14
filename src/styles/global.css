@@ -207,6 +207,20 @@ a {
   border-bottom: 1px solid #f0f2f5;
 }
 
+.table-row--button {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 12px;
+  padding-inline: 10px;
+}
+
+.table-row--button:hover {
+  background: #f9fafb;
+}
+
 .table-row:last-child {
   border-bottom: 0;
 }
@@ -355,6 +369,14 @@ a {
   background: linear-gradient(180deg, var(--success-bg) 0%, #ffffff 100%);
 }
 
+.member-card--panel {
+  width: min(720px, calc(100% - 24px));
+  grid-template-columns: 140px 1fr;
+  border-color: var(--border);
+  background: #ffffff;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+}
+
 .member-card__success {
   grid-column: 1 / -1;
   display: grid;
@@ -369,6 +391,10 @@ a {
 
 .member-card__success strong {
   color: var(--success-text);
+}
+
+.member-card__success--panel strong {
+  color: #111827;
 }
 
 .member-card__success p {
@@ -388,6 +414,12 @@ a {
   font-size: 0.9rem;
   font-weight: 800;
   letter-spacing: 0.04em;
+}
+
+.success-icon--panel {
+  width: 58px;
+  background: #111827;
+  font-size: 0.7rem;
 }
 
 .member-card__media {
@@ -418,6 +450,16 @@ a {
   display: grid;
   gap: 6px;
   color: var(--muted);
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.36);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  z-index: 20;
 }
 
 @media (max-width: 860px) {
@@ -460,5 +502,9 @@ a {
 
   .member-card__media {
     min-height: 180px;
+  }
+
+  .member-card--panel {
+    width: min(100%, 100%);
   }
 }
