@@ -25,6 +25,7 @@ type DemoMemberCard = {
   plan: string;
   enrolledAt: string;
   nextPaymentDate: string;
+  cedula: string;
 };
 
 const TODAY = "2026-05-14";
@@ -78,7 +79,8 @@ const demoMemberCard: DemoMemberCard = {
   name: "Anita",
   plan: "Pase libre",
   enrolledAt: "2026-03-14",
-  nextPaymentDate: "2026-05-19"
+  nextPaymentDate: "2026-05-19",
+  cedula: "52349876"
 };
 
 function parseLocalDate(value: string) {
@@ -141,6 +143,20 @@ function getPaymentText(nextPaymentDate: string) {
   }
 
   return `Le faltan ${daysLeft} dias para pagar`;
+}
+
+function getSuccessStatus(nextPaymentDate: string) {
+  const status = getClientStatus(nextPaymentDate);
+
+  if (status === "due") {
+    return "Cuota para regularizar hoy";
+  }
+
+  if (status === "upcoming") {
+    return "Cuota proxima a vencer";
+  }
+
+  return "Cuota al dia";
 }
 
 export function GymHomePage() {
@@ -351,47 +367,66 @@ export function GymHomePage() {
               <h2>Ingreso por cedula</h2>
             </div>
 
-            <div className="kiosk-simple">
-              <div className="kiosk-display">
-                <span>Cedula</span>
-                <strong>{kioskInput || "--------"}</strong>
-              </div>
+            {!kioskMember ? (
+              <div className="kiosk-simple">
+                <div className="kiosk-display">
+                  <span>Cedula</span>
+                  <strong>{kioskInput || "--------"}</strong>
+                </div>
 
-              <div className="keypad-grid">
-                {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((digit) => (
-                  <button key={digit} type="button" className="keypad-button" onClick={() => appendDigit(digit)}>
-                    {digit}
+                <p className="kiosk-helper">Escribi cualquier numero para simular el ingreso del socio.</p>
+
+                <div className="keypad-grid">
+                  {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((digit) => (
+                    <button key={digit} type="button" className="keypad-button" onClick={() => appendDigit(digit)}>
+                      {digit}
+                    </button>
+                  ))}
+                  <button type="button" className="keypad-button keypad-button--muted" onClick={clearKiosk}>
+                    Limpiar
                   </button>
-                ))}
-                <button type="button" className="keypad-button keypad-button--muted" onClick={clearKiosk}>
-                  Limpiar
-                </button>
-                <button type="button" className="keypad-button" onClick={() => appendDigit("0")}>
-                  0
-                </button>
-                <button type="button" className="keypad-button keypad-button--muted" onClick={removeDigit}>
-                  Borrar
-                </button>
-              </div>
+                  <button type="button" className="keypad-button" onClick={() => appendDigit("0")}>
+                    0
+                  </button>
+                  <button type="button" className="keypad-button keypad-button--muted" onClick={removeDigit}>
+                    Borrar
+                  </button>
+                </div>
 
-              <button type="button" className="button button--solid button--full" onClick={handleKioskSubmit}>
-                Marcar ingreso
-              </button>
-              <p>{kioskResult}</p>
-            </div>
+                <button type="button" className="button button--solid button--full" onClick={handleKioskSubmit}>
+                  Marcar ingreso
+                </button>
+                <p>{kioskResult}</p>
+              </div>
+            ) : null}
 
             {kioskMember ? (
-              <article className="member-card">
-                <div className="member-card__media" />
+              <article className="member-card member-card--success">
+                <div className="member-card__success">
+                  <span className="success-icon">OK</span>
+                  <div>
+                    <strong>Ingreso exitoso</strong>
+                    <p>{kioskResult}</p>
+                  </div>
+                </div>
+
+                <div className="member-card__media">
+                  <span>IMG</span>
+                </div>
                 <div className="member-card__body">
                   <span className="member-card__eyebrow">Socio activo</span>
                   <h3>Bienvenida {kioskMember.name}</h3>
                   <div className="member-card__info">
+                    <span>Cedula: {kioskMember.cedula}</span>
                     <span>Plan: {kioskMember.plan}</span>
                     <span>Ingreso: {formatDate(kioskMember.enrolledAt)}</span>
                     <span>Proximo pago: {formatDate(kioskMember.nextPaymentDate)}</span>
                     <span>Le quedan {diffDays(TODAY, kioskMember.nextPaymentDate)} dias para abonar</span>
+                    <span>{getSuccessStatus(kioskMember.nextPaymentDate)}</span>
                   </div>
+                  <button type="button" className="button button--ghost button--full" onClick={clearKiosk}>
+                    Volver al teclado
+                  </button>
                 </div>
               </article>
             ) : null}

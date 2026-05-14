@@ -14,6 +14,9 @@
   --yellow-text: #92400e;
   --red-bg: #fee2e2;
   --red-text: #b91c1c;
+  --success-bg: #ecfdf3;
+  --success-border: #86efac;
+  --success-text: #166534;
 }
 
 * {
@@ -89,6 +92,10 @@ a {
   color: var(--muted);
 }
 
+.kiosk-helper {
+  text-align: center;
+}
+
 .summary-row {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -161,6 +168,7 @@ a {
 .panel--kiosk {
   width: min(520px, 100%);
   justify-self: center;
+  gap: 18px;
 }
 
 .panel__header {
@@ -286,6 +294,7 @@ a {
 .kiosk-display strong {
   font-size: 2rem;
   letter-spacing: 0.08em;
+  text-align: center;
 }
 
 .keypad-grid {
@@ -322,6 +331,11 @@ a {
   color: #ffffff;
 }
 
+.button--ghost {
+  background: #f3f4f6;
+  color: #111827;
+}
+
 .button--full {
   width: 100%;
 }
@@ -336,16 +350,62 @@ a {
   background: #f9fafb;
 }
 
-.member-card__media {
+.member-card--success {
+  border-color: var(--success-border);
+  background: linear-gradient(180deg, var(--success-bg) 0%, #ffffff 100%);
+}
+
+.member-card__success {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
   border-radius: 14px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(134, 239, 172, 0.7);
+}
+
+.member-card__success strong {
+  color: var(--success-text);
+}
+
+.member-card__success p {
+  margin: 2px 0 0;
+  color: #3f3f46;
+}
+
+.success-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #22c55e;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.member-card__media {
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  border: 1px dashed #cbd5e1;
   background:
-    linear-gradient(135deg, #e5e7eb, #f3f4f6);
+    radial-gradient(circle at top, #ffffff, #e5e7eb);
   min-height: 140px;
+  color: #64748b;
+  font-weight: 800;
+  letter-spacing: 0.08em;
 }
 
 .member-card__body {
   display: grid;
-  gap: 8px;
+  gap: 10px;
   align-content: start;
 }
 
