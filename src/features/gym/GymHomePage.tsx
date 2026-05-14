@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 
-type ClientStatus = "up_to_date" | "upcoming" | "due";
+type ClientStatus = "up_to_date" | "upcoming" | "due" | "overdue";
 type GymTab = "panel" | "cobros" | "ingresar";
 
 type Client = {
@@ -144,8 +144,12 @@ function diffDays(fromDate: string, toDate: string) {
 function getClientStatus(nextPaymentDate: string): ClientStatus {
   const daysLeft = diffDays(TODAY, nextPaymentDate);
 
-  if (daysLeft <= 0) {
+  if (daysLeft === 0) {
     return "due";
+  }
+
+  if (daysLeft < 0) {
+    return "overdue";
   }
 
   if (daysLeft <= 5) {
@@ -161,6 +165,8 @@ function getStatusLabel(status: ClientStatus) {
       return "Vence";
     case "upcoming":
       return "Vence";
+    case "overdue":
+      return "Vencido";
     default:
       return "Vence";
   }
