@@ -8,12 +8,12 @@
   --panel: #ffffff;
   --border: #e5e7eb;
   --muted: #6b7280;
-  --green-bg: #dcfce7;
-  --green-text: #166534;
-  --yellow-bg: #fef3c7;
-  --yellow-text: #92400e;
-  --red-bg: #fee2e2;
-  --red-text: #b91c1c;
+  --green-bg: #dbe7df;
+  --green-text: #274c38;
+  --yellow-bg: #efe4bf;
+  --yellow-text: #725214;
+  --red-bg: #efd8d8;
+  --red-text: #7a2e2e;
   --success-bg: #ecfdf3;
   --success-border: #86efac;
   --success-text: #166534;
@@ -209,6 +209,7 @@ a {
 
 .clients-table {
   display: grid;
+  gap: 10px;
 }
 
 .movement-layout {
@@ -237,8 +238,10 @@ a {
 }
 
 .table-row {
-  padding: 14px 0;
-  border-bottom: 1px solid #f0f2f5;
+  padding: 14px 16px;
+  border: 1px solid #eceff3;
+  background: #fafbfc;
+  border-radius: 14px;
 }
 
 .table-row--button {
@@ -256,7 +259,7 @@ a {
 }
 
 .table-row:last-child {
-  border-bottom: 0;
+  border-bottom: 1px solid #eceff3;
 }
 
 .table-row span {
@@ -271,6 +274,10 @@ a {
 .client-cell strong,
 .table-status strong {
   font-size: 0.96rem;
+}
+
+.client-cell--dates strong {
+  font-variant-numeric: tabular-nums;
 }
 
 .status-pill {

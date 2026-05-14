@@ -153,17 +153,7 @@ function getStatusLabel(status: ClientStatus) {
 }
 
 function getPaymentText(nextPaymentDate: string) {
-  const daysLeft = diffDays(TODAY, nextPaymentDate);
-
-  if (daysLeft <= 0) {
-    return "Paga hoy o esta vencido";
-  }
-
-  if (daysLeft <= 5) {
-    return `Le faltan ${daysLeft} dias para pagar`;
-  }
-
-  return `Le faltan ${daysLeft} dias para pagar`;
+  return `Vence ${formatDate(nextPaymentDate)}`;
 }
 
 function getSuccessStatus(nextPaymentDate: string) {
@@ -371,7 +361,7 @@ export function GymHomePage() {
 
               <div className="table-head">
                 <span>Cliente</span>
-                <span>Ficha</span>
+                <span>Fechas</span>
                 <span className="table-head__right">Estado</span>
               </div>
 
@@ -385,9 +375,9 @@ export function GymHomePage() {
                         <strong>{client.name}</strong>
                         <span>Tocar para ver ficha</span>
                       </div>
-                      <div className="client-cell">
-                        <strong>CI {client.cedula}</strong>
-                        <span>{client.plan}</span>
+                      <div className="client-cell client-cell--dates">
+                        <strong>{formatDate(client.enrolledAt)} - {formatDate(client.nextPaymentDate)}</strong>
+                        <span>Ingreso - Proximo pago</span>
                       </div>
                       <div className="table-status">
                         <span className={`status-pill status-pill--${status}`}>{getStatusLabel(status)}</span>
