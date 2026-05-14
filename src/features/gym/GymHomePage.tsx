@@ -17,6 +17,8 @@ type Client = {
   lastVisitAt: string | null;
 };
 
+type ClientPlan = "Plan estandar" | "Plan 3 meses" | "Plan 6 meses";
+
 type NewClientForm = {
   name: string;
   cedula: string;
@@ -40,7 +42,7 @@ const initialClients: Client[] = [
     cedula: "45678901",
     phone: "099 123 456",
     address: "Rivera 1234",
-    plan: "Pase libre",
+    plan: "Plan estandar",
     enrolledAt: "2026-02-14",
     nextPaymentDate: "2026-05-14",
     active: true,
@@ -52,7 +54,7 @@ const initialClients: Client[] = [
     cedula: "51234098",
     phone: "094 778 221",
     address: "Colonia 845",
-    plan: "Funcional",
+    plan: "Plan 3 meses",
     enrolledAt: "2026-03-09",
     nextPaymentDate: "2026-05-19",
     active: true,
@@ -64,7 +66,7 @@ const initialClients: Client[] = [
     cedula: "49811234",
     phone: "091 884 220",
     address: "Bulevar Artigas 2011",
-    plan: "Musculacion",
+    plan: "Plan estandar",
     enrolledAt: "2026-01-02",
     nextPaymentDate: "2026-05-29",
     active: true,
@@ -76,7 +78,7 @@ const initialClients: Client[] = [
     cedula: "53445001",
     phone: "098 443 901",
     address: "8 de Octubre 5540",
-    plan: "Pase total",
+    plan: "Plan 6 meses",
     enrolledAt: "2026-04-01",
     nextPaymentDate: "2026-05-11",
     active: true,
@@ -120,6 +122,18 @@ function addMonths(dateValue: string, months: number) {
   const nextDate = parseLocalDate(dateValue);
   nextDate.setMonth(nextDate.getMonth() + months);
   return nextDate.toISOString().slice(0, 10);
+}
+
+function getPlanMonths(plan: string) {
+  if (plan === "Plan 3 meses") {
+    return 3;
+  }
+
+  if (plan === "Plan 6 meses") {
+    return 6;
+  }
+
+  return 1;
 }
 
 function diffDays(fromDate: string, toDate: string) {
@@ -191,7 +205,7 @@ export function GymHomePage() {
   const [kioskResult, setKioskResult] = useState("Todavia no hubo ingresos marcados.");
   const [kioskMember, setKioskMember] = useState<DemoMemberCard | null>(null);
   const [kioskCountdown, setKioskCountdown] = useState(12);
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<GymTab>("panel");
   const nextIdRef = useRef(100);
 
@@ -212,6 +226,11 @@ export function GymHomePage() {
   const sortedClients = useMemo(() => {
     return [...activeClients].sort((left, right) => diffDays(TODAY, left.nextPaymentDate) - diffDays(TODAY, right.nextPaymentDate));
   }, [activeClients]);
+
+  const selectedClient = useMemo(
+    () => clients.find((client) => client.id === selectedClientId) ?? null,
+    [clients, selectedClientId]
+  );
 
   useEffect(() => {
     if (!kioskMember) {
@@ -252,7 +271,7 @@ export function GymHomePage() {
       cedula: newClient.cedula.trim(),
       phone: "099 000 000",
       address: "Direccion a definir",
-      plan: "Pase libre",
+      plan: "Plan estandar",
       enrolledAt: newClient.enrolledAt,
       nextPaymentDate: addMonths(newClient.enrolledAt, 1),
       active: true,
@@ -295,6 +314,23 @@ export function GymHomePage() {
     setKioskMember(null);
     setKioskResult("Todavia no hubo ingresos marcados.");
     setKioskCountdown(12);
+  }
+
+  function handleClientPlanChange(clientId: string, plan: ClientPlan) {
+    setClients((current) => current.map((client) => (client.id === clientId ? { ...client, plan } : client)));
+  }
+
+  function handleClientPayment(clientId: string) {
+    setClients((current) =>
+      current.map((client) =>
+        client.id === clientId
+          ? {
+              ...client,
+              nextPaymentDate: addMonths(client.nextPaymentDate, getPlanMonths(client.plan))
+            }
+          : client
+      )
+    );
   }
 
   return (
@@ -370,7 +406,7 @@ export function GymHomePage() {
                   const status = getClientStatus(client.nextPaymentDate);
 
                   return (
-                    <button type="button" className="table-row table-row--button" key={client.id} onClick={() => setSelectedClient(client)}>
+                    <button type="button" className="table-row table-row--button" key={client.id} onClick={() => setSelectedClientId(client.id)}>
                       <div className="client-cell">
                         <strong>{client.name}</strong>
                         <span>Tocar para ver ficha</span>
@@ -510,13 +546,12 @@ export function GymHomePage() {
       )}
 
       {selectedClient ? (
-        <div className="overlay" role="presentation" onClick={() => setSelectedClient(null)}>
+        <div className="overlay" role="presentation" onClick={() => setSelectedClientId(null)}>
           <article className="member-card member-card--panel" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
             <div className="member-card__success member-card__success--panel">
               <span className="success-icon success-icon--panel">SOCIO</span>
               <div>
                 <strong>{selectedClient.name}</strong>
-                <p>Ficha completa del cliente seleccionada desde el panel.</p>
               </div>
             </div>
 
@@ -530,14 +565,29 @@ export function GymHomePage() {
                 <span>Cedula: {selectedClient.cedula}</span>
                 <span>Telefono: {selectedClient.phone}</span>
                 <span>Direccion: {selectedClient.address}</span>
-                <span>Plan: {selectedClient.plan}</span>
                 <span>Ingreso: {formatDate(selectedClient.enrolledAt)}</span>
                 <span>Proximo pago: {formatDate(selectedClient.nextPaymentDate)}</span>
                 <span>{getPaymentText(selectedClient.nextPaymentDate)}</span>
               </div>
-              <button type="button" className="button button--ghost button--full" onClick={() => setSelectedClient(null)}>
-                Cerrar ficha
-              </button>
+              <label className="plan-field">
+                <span>Plan</span>
+                <select
+                  value={selectedClient.plan}
+                  onChange={(event) => handleClientPlanChange(selectedClient.id, event.target.value as ClientPlan)}
+                >
+                  <option>Plan estandar</option>
+                  <option>Plan 3 meses</option>
+                  <option>Plan 6 meses</option>
+                </select>
+              </label>
+              <div className="client-modal-actions">
+                <button type="button" className="button button--solid" onClick={() => handleClientPayment(selectedClient.id)}>
+                  Pago
+                </button>
+                <button type="button" className="button button--ghost" onClick={() => setSelectedClientId(null)}>
+                  Cerrar ficha
+                </button>
+              </div>
             </div>
           </article>
         </div>
