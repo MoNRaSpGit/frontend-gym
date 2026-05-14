@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 
 type ClientStatus = "up_to_date" | "upcoming" | "due";
@@ -200,6 +200,7 @@ export function GymHomePage() {
   const [kioskInput, setKioskInput] = useState("");
   const [kioskResult, setKioskResult] = useState("Todavia no hubo ingresos marcados.");
   const [kioskMember, setKioskMember] = useState<DemoMemberCard | null>(null);
+  const [kioskCountdown, setKioskCountdown] = useState(12);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [activeTab, setActiveTab] = useState<GymTab>("panel");
   const nextIdRef = useRef(100);
@@ -221,6 +222,32 @@ export function GymHomePage() {
   const sortedClients = useMemo(() => {
     return [...activeClients].sort((left, right) => diffDays(TODAY, left.nextPaymentDate) - diffDays(TODAY, right.nextPaymentDate));
   }, [activeClients]);
+
+  useEffect(() => {
+    if (!kioskMember) {
+      return;
+    }
+
+    setKioskCountdown(12);
+
+    const intervalId = window.setInterval(() => {
+      setKioskCountdown((current) => {
+        if (current <= 1) {
+          window.clearInterval(intervalId);
+          setKioskInput("");
+          setKioskMember(null);
+          setKioskResult("Todavia no hubo ingresos marcados.");
+          return 12;
+        }
+
+        return current - 1;
+      });
+    }, 1000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [kioskMember]);
 
   function handleAddClient(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -258,7 +285,7 @@ export function GymHomePage() {
       )
     );
     setKioskMember(demoMemberCard);
-    setKioskResult(`Bienvenida ${demoMemberCard.name}. Ingreso marcado correctamente.`);
+    setKioskResult("Bienvenido");
   }
 
   function appendDigit(digit: string) {
@@ -277,6 +304,7 @@ export function GymHomePage() {
     setKioskInput("");
     setKioskMember(null);
     setKioskResult("Todavia no hubo ingresos marcados.");
+    setKioskCountdown(12);
   }
 
   return (
@@ -421,49 +449,53 @@ export function GymHomePage() {
       ) : (
         <section className="kiosk-page">
           <article className="panel panel--kiosk">
-            <div className="panel__header">
-              <h2>Ingreso por cedula</h2>
-            </div>
-
             {!kioskMember ? (
-              <div className="kiosk-simple">
-                <div className="kiosk-display">
-                  <span>Cedula</span>
-                  <strong>{kioskInput || "--------"}</strong>
+              <>
+                <div className="panel__header">
+                  <h2>Ingreso por cedula</h2>
                 </div>
 
-                <p className="kiosk-helper">Escribi cualquier numero para simular el ingreso del socio.</p>
+                <div className="kiosk-simple">
+                  <div className="kiosk-display">
+                    <span>Cedula</span>
+                    <strong>{kioskInput || "--------"}</strong>
+                  </div>
 
-                <div className="keypad-grid">
-                  {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((digit) => (
-                    <button key={digit} type="button" className="keypad-button" onClick={() => appendDigit(digit)}>
-                      {digit}
+                  <p className="kiosk-helper">Escribi cualquier numero para simular el ingreso del socio.</p>
+
+                  <div className="keypad-grid">
+                    {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((digit) => (
+                      <button key={digit} type="button" className="keypad-button" onClick={() => appendDigit(digit)}>
+                        {digit}
+                      </button>
+                    ))}
+                    <button type="button" className="keypad-button keypad-button--muted" onClick={clearKiosk}>
+                      Limpiar
                     </button>
-                  ))}
-                  <button type="button" className="keypad-button keypad-button--muted" onClick={clearKiosk}>
-                    Limpiar
-                  </button>
-                  <button type="button" className="keypad-button" onClick={() => appendDigit("0")}>
-                    0
-                  </button>
-                  <button type="button" className="keypad-button keypad-button--muted" onClick={removeDigit}>
-                    Borrar
-                  </button>
-                </div>
+                    <button type="button" className="keypad-button" onClick={() => appendDigit("0")}>
+                      0
+                    </button>
+                    <button type="button" className="keypad-button keypad-button--muted" onClick={removeDigit}>
+                      Borrar
+                    </button>
+                  </div>
 
-                <button type="button" className="button button--solid button--full" onClick={handleKioskSubmit}>
-                  Marcar ingreso
-                </button>
-                <p>{kioskResult}</p>
-              </div>
+                  <button type="button" className="button button--solid button--full" onClick={handleKioskSubmit}>
+                    Aceptar
+                  </button>
+                  <p>{kioskResult}</p>
+                </div>
+              </>
             ) : null}
 
             {kioskMember ? (
               <article className="member-card member-card--success">
                 <div className="member-card__success">
-                  <span className="success-icon">OK</span>
+                  <span className="success-icon success-icon--tick" aria-hidden="true">
+                    ✓
+                  </span>
                   <div>
-                    <strong>Ingreso exitoso</strong>
+                    <strong>Bienvenido</strong>
                     <p>{kioskResult}</p>
                   </div>
                 </div>
@@ -472,8 +504,7 @@ export function GymHomePage() {
                   <span>IMG</span>
                 </div>
                 <div className="member-card__body">
-                  <span className="member-card__eyebrow">Socio activo</span>
-                  <h3>Bienvenida {kioskMember.name}</h3>
+                  <h3>{kioskMember.name}</h3>
                   <p className="member-card__lead">Tu ingreso fue registrado. Ya podes pasar al salon.</p>
                   <div className="member-card__info">
                     <span>Cedula: {getMaskedCedula(kioskMember.cedula)}</span>
@@ -485,9 +516,7 @@ export function GymHomePage() {
                     <strong>{getSuccessStatus(kioskMember.nextPaymentDate)}</strong>
                     <span>Le quedan {diffDays(TODAY, kioskMember.nextPaymentDate)} dias para abonar</span>
                   </div>
-                  <button type="button" className="button button--ghost button--full" onClick={clearKiosk}>
-                    Volver al teclado
-                  </button>
+                  <p className="member-card__countdown">Volviendo al ingreso en {kioskCountdown}s</p>
                 </div>
               </article>
             ) : null}

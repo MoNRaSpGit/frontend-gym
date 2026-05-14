@@ -176,6 +176,8 @@ a {
   width: min(520px, 100%);
   justify-self: center;
   gap: 18px;
+  min-height: 640px;
+  align-content: start;
 }
 
 .panel__header {
@@ -457,6 +459,11 @@ a {
   font-size: 0.7rem;
 }
 
+.success-icon--tick {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
 .member-card__media {
   display: grid;
   place-items: center;
@@ -518,6 +525,13 @@ a {
   background: var(--danger-soft);
   border-color: #f5b5bd;
   color: var(--danger-text);
+}
+
+.member-card__countdown {
+  margin: 0;
+  color: #7c6a4d;
+  font-size: 0.88rem;
+  text-align: right;
 }
 
 .overlay {
