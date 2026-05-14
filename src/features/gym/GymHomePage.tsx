@@ -485,7 +485,6 @@ export function GymHomePage() {
                     ✓
                   </span>
                   <div>
-                    <strong>Bienvenido</strong>
                     <p>{kioskResult}</p>
                   </div>
                 </div>
