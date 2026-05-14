@@ -207,6 +207,16 @@ a {
   color: var(--muted);
 }
 
+.client-cell {
+  display: grid;
+  gap: 4px;
+}
+
+.client-cell strong,
+.table-status strong {
+  font-size: 0.96rem;
+}
+
 .status-pill {
   display: inline-flex;
   align-items: center;
@@ -231,6 +241,14 @@ a {
 .status-pill--due {
   background: var(--red-bg);
   color: var(--red-text);
+}
+
+.status-note {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.82rem;
+  color: var(--muted);
+  text-align: right;
 }
 
 .simple-form,
@@ -370,6 +388,10 @@ a {
 
   .table-status {
     justify-self: start;
+  }
+
+  .status-note {
+    text-align: left;
   }
 
   .member-card {
