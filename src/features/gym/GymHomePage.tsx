@@ -22,6 +22,7 @@ type ClientPlan = "Plan estandar" | "Plan 3 meses" | "Plan 6 meses";
 type NewClientForm = {
   name: string;
   cedula: string;
+  plan: ClientPlan;
   enrolledAt: string;
 };
 
@@ -89,6 +90,7 @@ const initialClients: Client[] = [
 const initialForm: NewClientForm = {
   name: "",
   cedula: "",
+  plan: "Plan estandar",
   enrolledAt: TODAY
 };
 
@@ -271,7 +273,7 @@ export function GymHomePage() {
       cedula: newClient.cedula.trim(),
       phone: "099 000 000",
       address: "Direccion a definir",
-      plan: "Plan estandar",
+      plan: newClient.plan,
       enrolledAt: newClient.enrolledAt,
       nextPaymentDate: addMonths(newClient.enrolledAt, 1),
       active: true,
@@ -434,14 +436,22 @@ export function GymHomePage() {
                     onChange={(event) => setNewClient((current) => ({ ...current, name: event.target.value }))}
                     placeholder="Nombre"
                   />
-                  <input
-                    value={newClient.cedula}
-                    onChange={(event) => setNewClient((current) => ({ ...current, cedula: event.target.value }))}
-                    placeholder="Cedula"
-                  />
-                  <input
-                    type="date"
-                    value={newClient.enrolledAt}
+                <input
+                  value={newClient.cedula}
+                  onChange={(event) => setNewClient((current) => ({ ...current, cedula: event.target.value }))}
+                  placeholder="Cedula"
+                />
+                <select
+                  value={newClient.plan}
+                  onChange={(event) => setNewClient((current) => ({ ...current, plan: event.target.value as ClientPlan }))}
+                >
+                  <option>Plan estandar</option>
+                  <option>Plan 3 meses</option>
+                  <option>Plan 6 meses</option>
+                </select>
+                <input
+                  type="date"
+                  value={newClient.enrolledAt}
                     onChange={(event) => setNewClient((current) => ({ ...current, enrolledAt: event.target.value }))}
                   />
                   <button type="submit" className="button button--solid button--full">
