@@ -271,6 +271,16 @@ a {
   color: #15803d;
 }
 
+.movement-layout .movement-row {
+  background: var(--warning-soft);
+  border-color: #f4d38b;
+  color: var(--warning-text);
+}
+
+.movement-layout .movement-row strong {
+  color: var(--warning-text);
+}
+
 .table-row {
   padding: 14px 16px;
   border: 1px solid #eceff3;
