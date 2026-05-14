@@ -600,7 +600,7 @@ export function GymHomePage() {
             <div className="collections-list">
               {movements.map((movement) => {
                 const isExpanded = expandedMovementId === movement.id;
-                const title = movement.kind === "payment" ? `Pago ${movement.clientName}` : `Alta ${movement.clientName}`;
+                const title = movement.clientName;
 
                 return (
                   <div className="collection-item" key={movement.id}>
