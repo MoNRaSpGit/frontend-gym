@@ -323,12 +323,14 @@ a {
 }
 
 .simple-form input,
+.simple-form select,
 .kiosk-simple input {
   width: 100%;
   padding: 12px 14px;
   border: 1px solid var(--border);
   border-radius: 12px;
   background: #fff;
+  color: #1f2937;
 }
 
 .kiosk-display {
