@@ -144,11 +144,11 @@ function getClientStatus(nextPaymentDate: string): ClientStatus {
 function getStatusLabel(status: ClientStatus) {
   switch (status) {
     case "due":
-      return "Rojo";
+      return "Vence";
     case "upcoming":
-      return "Amarillo";
+      return "Vence";
     default:
-      return "Verde";
+      return "Vence";
   }
 }
 
@@ -361,7 +361,7 @@ export function GymHomePage() {
 
               <div className="table-head">
                 <span>Cliente</span>
-                <span>Fechas</span>
+                <span>Ingreso</span>
                 <span className="table-head__right">Estado</span>
               </div>
 
@@ -376,11 +376,11 @@ export function GymHomePage() {
                         <span>Tocar para ver ficha</span>
                       </div>
                       <div className="client-cell client-cell--dates">
-                        <strong>{formatDate(client.enrolledAt)} - {formatDate(client.nextPaymentDate)}</strong>
-                        <span>Ingreso - Proximo pago</span>
+                        <strong>{formatDate(client.enrolledAt)}</strong>
+                        <span>Fecha de ingreso</span>
                       </div>
                       <div className="table-status">
-                        <span className={`status-pill status-pill--${status}`}>{getStatusLabel(status)}</span>
+                        <span className={`status-pill status-pill--${status}`}>{getStatusLabel(status)} {formatDate(client.nextPaymentDate)}</span>
                         <span className="status-note">{getPaymentText(client.nextPaymentDate)}</span>
                       </div>
                     </button>
