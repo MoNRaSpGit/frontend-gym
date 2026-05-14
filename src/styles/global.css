@@ -209,11 +209,8 @@ a {
   display: grid;
 }
 
-.movement-section {
+.movement-layout {
   display: grid;
-  gap: 12px;
-  padding-top: 8px;
-  border-top: 1px solid #f0f2f5;
 }
 
 .movement-list {

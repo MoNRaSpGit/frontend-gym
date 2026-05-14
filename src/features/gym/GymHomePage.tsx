@@ -334,42 +334,75 @@ export function GymHomePage() {
       </section>
 
       {activeTab === "panel" ? (
-        <section className="layout-simple">
-          <article className="panel panel--main">
-            <div className="panel__header">
-              <h2>Clientes</h2>
-            </div>
+        <>
+          <section className="layout-simple">
+            <article className="panel panel--main">
+              <div className="panel__header">
+                <h2>Clientes</h2>
+              </div>
 
-            <div className="table-head">
-              <span>Cliente</span>
-              <span>Ficha</span>
-              <span className="table-head__right">Estado</span>
-            </div>
+              <div className="table-head">
+                <span>Cliente</span>
+                <span>Ficha</span>
+                <span className="table-head__right">Estado</span>
+              </div>
 
-            <div className="clients-table">
-              {sortedClients.map((client) => {
-                const status = getClientStatus(client.nextPaymentDate);
+              <div className="clients-table">
+                {sortedClients.map((client) => {
+                  const status = getClientStatus(client.nextPaymentDate);
 
-                return (
-                  <button type="button" className="table-row table-row--button" key={client.id} onClick={() => setSelectedClient(client)}>
-                    <div className="client-cell">
-                      <strong>{client.name}</strong>
-                      <span>Tocar para ver ficha</span>
-                    </div>
-                    <div className="client-cell">
-                      <strong>CI {client.cedula}</strong>
-                      <span>{client.plan}</span>
-                    </div>
-                    <div className="table-status">
-                      <span className={`status-pill status-pill--${status}`}>{getStatusLabel(status)}</span>
-                      <span className="status-note">{getPaymentText(client.nextPaymentDate)}</span>
-                    </div>
+                  return (
+                    <button type="button" className="table-row table-row--button" key={client.id} onClick={() => setSelectedClient(client)}>
+                      <div className="client-cell">
+                        <strong>{client.name}</strong>
+                        <span>Tocar para ver ficha</span>
+                      </div>
+                      <div className="client-cell">
+                        <strong>CI {client.cedula}</strong>
+                        <span>{client.plan}</span>
+                      </div>
+                      <div className="table-status">
+                        <span className={`status-pill status-pill--${status}`}>{getStatusLabel(status)}</span>
+                        <span className="status-note">{getPaymentText(client.nextPaymentDate)}</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </article>
+
+            <aside className="side-stack">
+              <article className="panel">
+                <div className="panel__header">
+                  <h2>Nuevo cliente</h2>
+                </div>
+
+                <form className="simple-form" onSubmit={handleAddClient}>
+                  <input
+                    value={newClient.name}
+                    onChange={(event) => setNewClient((current) => ({ ...current, name: event.target.value }))}
+                    placeholder="Nombre"
+                  />
+                  <input
+                    value={newClient.cedula}
+                    onChange={(event) => setNewClient((current) => ({ ...current, cedula: event.target.value }))}
+                    placeholder="Cedula"
+                  />
+                  <input
+                    type="date"
+                    value={newClient.enrolledAt}
+                    onChange={(event) => setNewClient((current) => ({ ...current, enrolledAt: event.target.value }))}
+                  />
+                  <button type="submit" className="button button--solid button--full">
+                    Agregar
                   </button>
-                );
-              })}
-            </div>
+                </form>
+              </article>
+            </aside>
+          </section>
 
-            <div className="movement-section">
+          <section className="movement-layout">
+            <article className="panel">
               <div className="panel__header">
                 <h2>Movimiento</h2>
               </div>
@@ -382,38 +415,9 @@ export function GymHomePage() {
                   </div>
                 ))}
               </div>
-            </div>
-          </article>
-
-          <aside className="side-stack">
-            <article className="panel">
-              <div className="panel__header">
-                <h2>Nuevo cliente</h2>
-              </div>
-
-              <form className="simple-form" onSubmit={handleAddClient}>
-                <input
-                  value={newClient.name}
-                  onChange={(event) => setNewClient((current) => ({ ...current, name: event.target.value }))}
-                  placeholder="Nombre"
-                />
-                <input
-                  value={newClient.cedula}
-                  onChange={(event) => setNewClient((current) => ({ ...current, cedula: event.target.value }))}
-                  placeholder="Cedula"
-                />
-                <input
-                  type="date"
-                  value={newClient.enrolledAt}
-                  onChange={(event) => setNewClient((current) => ({ ...current, enrolledAt: event.target.value }))}
-                />
-                <button type="submit" className="button button--solid button--full">
-                  Agregar
-                </button>
-              </form>
             </article>
-          </aside>
-        </section>
+          </section>
+        </>
       ) : (
         <section className="kiosk-page">
           <article className="panel panel--kiosk">
