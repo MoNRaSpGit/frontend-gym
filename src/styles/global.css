@@ -245,6 +245,11 @@ a {
   color: var(--muted);
 }
 
+.collection-amount {
+  color: #15803d;
+  font-weight: 700;
+}
+
 .movement-list {
   display: grid;
   gap: 10px;

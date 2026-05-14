@@ -499,16 +499,17 @@ export function GymHomePage() {
           <section className="movement-layout">
             <article className="panel">
               <div className="panel__header">
-                <h2>Movimiento</h2>
+                <h2>Proximos vencimientos</h2>
               </div>
 
               <div className="movement-list">
-                {demoMovements.map((movement) => (
-                  <div className="movement-row" key={movement.id}>
-                    <span>{movement.text}</span>
-                    <strong>{movement.amount}</strong>
+                {collectionsSummary.dueSoon.map((client) => (
+                  <div className="movement-row" key={client.id}>
+                    <span>{client.name}</span>
+                    <strong>Vence {formatDate(client.nextPaymentDate)}</strong>
                   </div>
                 ))}
+                {collectionsSummary.dueSoon.length === 0 ? <p className="empty-copy">No hay vencimientos cercanos.</p> : null}
               </div>
             </article>
           </section>
@@ -538,22 +539,18 @@ export function GymHomePage() {
 
           <article className="panel">
             <div className="panel__header">
-              <h2>Proximos vencimientos</h2>
+              <h2>Movimiento</h2>
             </div>
 
             <div className="collections-list">
-              {collectionsSummary.dueSoon.map((client) => (
-                <div className="collection-row" key={client.id}>
+              {demoMovements.map((movement) => (
+                <div className="collection-row" key={movement.id}>
                   <div className="collection-main">
-                    <strong>{client.name}</strong>
-                    <span>Vence {formatDate(client.nextPaymentDate)}</span>
+                    <strong>{movement.text}</strong>
                   </div>
-                  <button type="button" className="button button--ghost" onClick={() => setSelectedClientId(client.id)}>
-                    Ver ficha
-                  </button>
+                  <span className="collection-amount">{movement.amount}</span>
                 </div>
               ))}
-              {collectionsSummary.dueSoon.length === 0 ? <p className="empty-copy">No hay vencimientos cercanos.</p> : null}
             </div>
           </article>
         </section>
