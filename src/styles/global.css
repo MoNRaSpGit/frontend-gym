@@ -164,6 +164,8 @@ a {
 
 .kiosk-page {
   display: grid;
+  min-height: 640px;
+  align-items: center;
 }
 
 .panel {
@@ -419,6 +421,12 @@ a {
   border-color: var(--border);
   background: #ffffff;
   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+}
+
+.member-card--welcome {
+  width: min(760px, 100%);
+  justify-self: center;
+  box-shadow: 0 28px 70px rgba(90, 68, 36, 0.16);
 }
 
 .member-card__success {
