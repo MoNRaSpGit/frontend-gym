@@ -226,6 +226,11 @@ a {
   gap: 20px;
 }
 
+.collection-item {
+  display: grid;
+  gap: 8px;
+}
+
 .collection-row {
   display: flex;
   align-items: center;
@@ -235,6 +240,35 @@ a {
   border: 1px solid #eceff3;
   background: #fafbfc;
   border-radius: 14px;
+}
+
+.collection-row--expandable {
+  width: 100%;
+  border: 1px solid #eceff3;
+  cursor: pointer;
+  text-align: left;
+}
+
+.collection-row--expanded {
+  background: #f8fafc;
+}
+
+.collection-detail-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #f3f6fa;
+  border: 1px solid #e2e8f0;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.collection-detail-bar strong {
+  color: #1f2937;
+  font-size: 0.9rem;
 }
 
 .collection-main {
@@ -250,6 +284,10 @@ a {
 .collection-main span,
 .empty-copy {
   color: var(--muted);
+}
+
+.collection-detail {
+  display: none;
 }
 
 .collection-amount {

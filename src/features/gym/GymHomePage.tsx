@@ -32,6 +32,15 @@ type DemoMemberCard = {
   cedula: string;
 };
 
+type MovementItem = {
+  id: string;
+  clientName: string;
+  amount: string;
+  dateTime: string;
+  plan: string;
+  kind: "payment" | "signup";
+};
+
 const TODAY = "2026-05-14";
 
 const initialClients: Client[] = [
@@ -100,10 +109,10 @@ const demoMemberCard: DemoMemberCard = {
   cedula: "52349876"
 };
 
-const demoMovements = [
-  { id: "m-001", text: "Pago Juan Perez", amount: "+ $500" },
-  { id: "m-002", text: "Pago Camila Suarez", amount: "+ $1.900" },
-  { id: "m-003", text: "Alta Lucia Silva", amount: "Nuevo cliente" }
+const demoMovements: MovementItem[] = [
+  { id: "m-001", clientName: "Juan Perez", amount: "+ $500", dateTime: "2026-05-14T09:10:00", plan: "Plan estandar", kind: "payment" },
+  { id: "m-002", clientName: "Camila Suarez", amount: "+ $1.900", dateTime: "2026-05-14T10:35:00", plan: "Plan 3 meses", kind: "payment" },
+  { id: "m-003", clientName: "Lucia Silva", amount: "Nuevo cliente", dateTime: "2026-05-13T18:20:00", plan: "Plan 6 meses", kind: "signup" }
 ];
 
 function parseLocalDate(value: string) {
@@ -116,6 +125,16 @@ function formatDate(value: string) {
     month: "2-digit",
     year: "numeric"
   }).format(parseLocalDate(value));
+}
+
+function formatDateTime(value: string) {
+  return new Intl.DateTimeFormat("es-UY", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(new Date(value));
 }
 
 function addMonths(dateValue: string, months: number) {
@@ -206,12 +225,14 @@ function getPaymentAlertVariant(nextPaymentDate: string) {
 
 export function GymHomePage() {
   const [clients, setClients] = useState(initialClients);
+  const [movements, setMovements] = useState(demoMovements);
   const [newClient, setNewClient] = useState(initialForm);
   const [kioskInput, setKioskInput] = useState("");
   const [kioskResult, setKioskResult] = useState("Todavia no hubo ingresos marcados.");
   const [kioskMember, setKioskMember] = useState<DemoMemberCard | null>(null);
   const [kioskCountdown, setKioskCountdown] = useState(12);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const [expandedMovementId, setExpandedMovementId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<GymTab>("panel");
   const nextIdRef = useRef(100);
 
@@ -299,6 +320,17 @@ export function GymHomePage() {
     };
 
     setClients((current) => [createdClient, ...current]);
+    setMovements((current) => [
+      {
+        id: `m-${nextIdRef.current++}`,
+        clientName: createdClient.name,
+        amount: "Nuevo cliente",
+        dateTime: `${TODAY}T11:30:00`,
+        plan: createdClient.plan,
+        kind: "signup"
+      },
+      ...current
+    ]);
     setNewClient(initialForm);
   }
 
@@ -337,6 +369,11 @@ export function GymHomePage() {
   }
 
   function handleQuickPayment(clientId: string) {
+    const selected = clients.find((client) => client.id === clientId);
+    if (!selected) {
+      return;
+    }
+
     setClients((current) =>
       current.map((client) =>
         client.id === clientId
@@ -347,6 +384,17 @@ export function GymHomePage() {
           : client
       )
     );
+    setMovements((current) => [
+      {
+        id: `m-${nextIdRef.current++}`,
+        clientName: selected.name,
+        amount: selected.plan === "Plan estandar" ? "+ $500" : selected.plan === "Plan 3 meses" ? "+ $1.500" : "+ $3.000",
+        dateTime: `${TODAY}T12:15:00`,
+        plan: selected.plan,
+        kind: "payment"
+      },
+      ...current
+    ]);
   }
 
   return (
@@ -554,14 +602,36 @@ export function GymHomePage() {
             </div>
 
             <div className="collections-list">
-              {demoMovements.map((movement) => (
-                <div className="collection-row" key={movement.id}>
-                  <div className="collection-main">
-                    <strong>{movement.text}</strong>
+              {movements.map((movement) => {
+                const isExpanded = expandedMovementId === movement.id;
+                const title = movement.kind === "payment" ? `Pago ${movement.clientName}` : `Alta ${movement.clientName}`;
+
+                return (
+                  <div className="collection-item" key={movement.id}>
+                    <button
+                      type="button"
+                      className={`collection-row collection-row--expandable ${isExpanded ? "collection-row--expanded" : ""}`}
+                      onClick={() => setExpandedMovementId(isExpanded ? null : movement.id)}
+                    >
+                    <div className="collection-main">
+                      <strong>{title}</strong>
+                      {isExpanded ? (
+                        <span className="collection-detail">
+                          {formatDateTime(movement.dateTime)} · {movement.plan}
+                        </span>
+                      ) : null}
+                    </div>
+                      <span className="collection-amount">{movement.amount}</span>
+                    </button>
+                    {isExpanded ? (
+                      <div className="collection-detail-bar">
+                        <span>{formatDateTime(movement.dateTime)}</span>
+                        <strong>{movement.plan}</strong>
+                      </div>
+                    ) : null}
                   </div>
-                  <span className="collection-amount">{movement.amount}</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </article>
         </section>
