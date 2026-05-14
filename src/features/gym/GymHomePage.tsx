@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 
 type ClientStatus = "up_to_date" | "upcoming" | "due" | "overdue";
@@ -226,7 +226,6 @@ export function GymHomePage() {
   const [kioskInput, setKioskInput] = useState("");
   const [kioskResult, setKioskResult] = useState("Todavia no hubo ingresos marcados.");
   const [kioskMember, setKioskMember] = useState<DemoMemberCard | null>(null);
-  const [kioskCountdown, setKioskCountdown] = useState(12);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [expandedMovementId, setExpandedMovementId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<GymTab>("panel");
@@ -268,32 +267,6 @@ export function GymHomePage() {
     () => clients.find((client) => client.id === selectedClientId) ?? null,
     [clients, selectedClientId]
   );
-
-  useEffect(() => {
-    if (!kioskMember) {
-      return;
-    }
-
-    setKioskCountdown(12);
-
-    const intervalId = window.setInterval(() => {
-      setKioskCountdown((current) => {
-        if (current <= 1) {
-          window.clearInterval(intervalId);
-          setKioskInput("");
-          setKioskMember(null);
-          setKioskResult("Todavia no hubo ingresos marcados.");
-          return 12;
-        }
-
-        return current - 1;
-      });
-    }, 1000);
-
-    return () => {
-      window.clearInterval(intervalId);
-    };
-  }, [kioskMember]);
 
   function handleAddClient(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -361,7 +334,6 @@ export function GymHomePage() {
     setKioskInput("");
     setKioskMember(null);
     setKioskResult("Todavia no hubo ingresos marcados.");
-    setKioskCountdown(12);
   }
 
   function handleQuickPayment(clientId: string) {
@@ -693,7 +665,9 @@ export function GymHomePage() {
                   <strong>{getSuccessStatus(kioskMember.nextPaymentDate)}</strong>
                   <span>Le quedan {diffDays(TODAY, kioskMember.nextPaymentDate)} dias para abonar</span>
                 </div>
-                <p className="member-card__countdown">Volviendo al ingreso en {kioskCountdown}s</p>
+                <button type="button" className="button button--solid button--full" onClick={clearKiosk}>
+                  Aceptar
+                </button>
               </div>
             </article>
           )}
