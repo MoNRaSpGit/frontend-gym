@@ -310,7 +310,7 @@ export function GymHomePage() {
       address: "Direccion a definir",
       plan: newClient.plan,
       enrolledAt: newClient.enrolledAt,
-      nextPaymentDate: addMonths(newClient.enrolledAt, 1),
+      nextPaymentDate: addMonths(newClient.enrolledAt, getPlanMonths(newClient.plan)),
       active: true,
       lastVisitAt: null
     };
