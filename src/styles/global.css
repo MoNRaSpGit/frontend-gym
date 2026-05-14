@@ -202,6 +202,34 @@ a {
   display: grid;
 }
 
+.movement-section {
+  display: grid;
+  gap: 12px;
+  padding-top: 8px;
+  border-top: 1px solid #f0f2f5;
+}
+
+.movement-list {
+  display: grid;
+  gap: 10px;
+}
+
+.movement-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #f6fff8;
+  border: 1px solid #dcfce7;
+  color: #166534;
+}
+
+.movement-row strong {
+  color: #15803d;
+}
+
 .table-row {
   padding: 14px 0;
   border-bottom: 1px solid #f0f2f5;

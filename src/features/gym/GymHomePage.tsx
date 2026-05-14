@@ -98,6 +98,12 @@ const demoMemberCard: DemoMemberCard = {
   cedula: "52349876"
 };
 
+const demoMovements = [
+  { id: "m-001", text: "Pago Juan Perez", amount: "+ $500" },
+  { id: "m-002", text: "Pago Camila Suarez", amount: "+ $1.900" },
+  { id: "m-003", text: "Alta Lucia Silva", amount: "Nuevo cliente" }
+];
+
 function parseLocalDate(value: string) {
   return new Date(`${value}T00:00:00`);
 }
@@ -347,6 +353,21 @@ export function GymHomePage() {
                   </button>
                 );
               })}
+            </div>
+
+            <div className="movement-section">
+              <div className="panel__header">
+                <h2>Movimiento</h2>
+              </div>
+
+              <div className="movement-list">
+                {demoMovements.map((movement) => (
+                  <div className="movement-row" key={movement.id}>
+                    <span>{movement.text}</span>
+                    <strong>{movement.amount}</strong>
+                  </div>
+                ))}
+              </div>
             </div>
           </article>
 
