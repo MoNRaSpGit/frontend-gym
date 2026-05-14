@@ -180,6 +180,20 @@ function getSuccessStatus(nextPaymentDate: string) {
   return "Cuota al dia";
 }
 
+function getMaskedCedula(value: string) {
+  return `${value.slice(0, 4)}....`;
+}
+
+function getPaymentAlertVariant(nextPaymentDate: string) {
+  const daysLeft = diffDays(TODAY, nextPaymentDate);
+
+  if (daysLeft < 5) {
+    return "danger";
+  }
+
+  return "warning";
+}
+
 export function GymHomePage() {
   const [clients, setClients] = useState(initialClients);
   const [newClient, setNewClient] = useState(initialForm);
@@ -456,13 +470,16 @@ export function GymHomePage() {
                 <div className="member-card__body">
                   <span className="member-card__eyebrow">Socio activo</span>
                   <h3>Bienvenida {kioskMember.name}</h3>
+                  <p className="member-card__lead">Tu ingreso fue registrado. Ya podes pasar al salon.</p>
                   <div className="member-card__info">
-                    <span>Cedula: {kioskMember.cedula}</span>
+                    <span>Cedula: {getMaskedCedula(kioskMember.cedula)}</span>
                     <span>Plan: {kioskMember.plan}</span>
                     <span>Ingreso: {formatDate(kioskMember.enrolledAt)}</span>
                     <span>Proximo pago: {formatDate(kioskMember.nextPaymentDate)}</span>
+                  </div>
+                  <div className={`payment-alert payment-alert--${getPaymentAlertVariant(kioskMember.nextPaymentDate)}`}>
+                    <strong>{getSuccessStatus(kioskMember.nextPaymentDate)}</strong>
                     <span>Le quedan {diffDays(TODAY, kioskMember.nextPaymentDate)} dias para abonar</span>
-                    <span>{getSuccessStatus(kioskMember.nextPaymentDate)}</span>
                   </div>
                   <button type="button" className="button button--ghost button--full" onClick={clearKiosk}>
                     Volver al teclado

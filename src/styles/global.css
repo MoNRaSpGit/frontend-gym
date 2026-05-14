@@ -17,6 +17,13 @@
   --success-bg: #ecfdf3;
   --success-border: #86efac;
   --success-text: #166534;
+  --welcome-cream: #fffaf0;
+  --welcome-gold: #d6b46d;
+  --welcome-ink: #2f2419;
+  --warning-soft: #fff7db;
+  --warning-text: #9a6700;
+  --danger-soft: #fff1f2;
+  --danger-text: #b42318;
 }
 
 * {
@@ -393,8 +400,11 @@ a {
 }
 
 .member-card--success {
-  border-color: var(--success-border);
-  background: linear-gradient(180deg, var(--success-bg) 0%, #ffffff 100%);
+  border-color: rgba(214, 180, 109, 0.45);
+  background:
+    radial-gradient(circle at top right, rgba(214, 180, 109, 0.18), transparent 28%),
+    linear-gradient(180deg, var(--welcome-cream) 0%, #ffffff 100%);
+  box-shadow: 0 22px 48px rgba(90, 68, 36, 0.12);
 }
 
 .member-card--panel {
@@ -454,11 +464,13 @@ a {
   display: grid;
   place-items: center;
   border-radius: 14px;
-  border: 1px dashed #cbd5e1;
+  align-self: start;
+  border: 1px dashed rgba(214, 180, 109, 0.7);
   background:
-    radial-gradient(circle at top, #ffffff, #e5e7eb);
-  min-height: 140px;
-  color: #64748b;
+    linear-gradient(180deg, #fffef9, #f6ecda);
+  min-height: 98px;
+  max-height: 98px;
+  color: #9a7b3f;
   font-weight: 800;
   letter-spacing: 0.08em;
 }
@@ -472,12 +484,43 @@ a {
 .member-card__body h3 {
   margin: 0;
   font-size: 1.45rem;
+  color: var(--welcome-ink);
+}
+
+.member-card__lead {
+  margin: 0;
+  color: #6b5b43;
+  font-size: 0.96rem;
 }
 
 .member-card__info {
   display: grid;
   gap: 6px;
   color: var(--muted);
+}
+
+.payment-alert {
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+}
+
+.payment-alert strong {
+  font-size: 0.98rem;
+}
+
+.payment-alert--warning {
+  background: var(--warning-soft);
+  border-color: #f4d38b;
+  color: var(--warning-text);
+}
+
+.payment-alert--danger {
+  background: var(--danger-soft);
+  border-color: #f5b5bd;
+  color: var(--danger-text);
 }
 
 .overlay {
