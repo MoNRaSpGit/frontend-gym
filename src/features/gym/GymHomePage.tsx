@@ -442,7 +442,7 @@ export function GymHomePage() {
                   const status = getClientStatus(client.nextPaymentDate);
 
                   return (
-                    <button type="button" className="table-row table-row--button" key={client.id} onClick={() => setSelectedClientId(client.id)}>
+                    <div className="table-row" key={client.id}>
                       <div className="client-cell">
                         <strong>{client.name}</strong>
                       </div>
@@ -452,7 +452,7 @@ export function GymHomePage() {
                       <div className="table-status">
                         <span className={`status-pill status-pill--${status}`}>{getStatusLabel(status)} {formatDate(client.nextPaymentDate)}</span>
                       </div>
-                    </button>
+                    </div>
                   );
                 })}
               </div>
@@ -637,6 +637,7 @@ export function GymHomePage() {
               <span className="success-icon success-icon--panel">SOCIO</span>
               <div>
                 <strong>{selectedClient.name}</strong>
+                <p>Cobro y estado del cliente</p>
               </div>
             </div>
 
@@ -644,16 +645,36 @@ export function GymHomePage() {
               <span>IMG</span>
             </div>
             <div className="member-card__body">
-              <span className="member-card__eyebrow">Ficha del cliente</span>
               <h3>{selectedClient.name}</h3>
-              <div className="member-card__info">
-                <span>Cedula: {selectedClient.cedula}</span>
-                <span>Telefono: {selectedClient.phone}</span>
-                <span>Direccion: {selectedClient.address}</span>
-                <span>Plan: {selectedClient.plan}</span>
-                <span>Ingreso: {formatDate(selectedClient.enrolledAt)}</span>
-                <span>Proximo pago: {formatDate(selectedClient.nextPaymentDate)}</span>
-                <span>{getPaymentText(selectedClient.nextPaymentDate)}</span>
+              <div className="detail-grid">
+                <div className="detail-card">
+                  <span className="detail-label">Cedula</span>
+                  <strong>{selectedClient.cedula}</strong>
+                </div>
+                <div className="detail-card">
+                  <span className="detail-label">Telefono</span>
+                  <strong>{selectedClient.phone}</strong>
+                </div>
+                <div className="detail-card">
+                  <span className="detail-label">Direccion</span>
+                  <strong>{selectedClient.address}</strong>
+                </div>
+                <div className="detail-card">
+                  <span className="detail-label">Plan</span>
+                  <strong>{selectedClient.plan}</strong>
+                </div>
+                <div className="detail-card">
+                  <span className="detail-label">Ingreso</span>
+                  <strong>{formatDate(selectedClient.enrolledAt)}</strong>
+                </div>
+                <div className="detail-card">
+                  <span className="detail-label">Vencimiento</span>
+                  <strong>{formatDate(selectedClient.nextPaymentDate)}</strong>
+                </div>
+              </div>
+              <div className={`payment-alert payment-alert--${getPaymentAlertVariant(selectedClient.nextPaymentDate)}`}>
+                <strong>{getPaymentText(selectedClient.nextPaymentDate)}</strong>
+                <span>{getSuccessStatus(selectedClient.nextPaymentDate)}</span>
               </div>
               <button type="button" className="button button--ghost button--full" onClick={() => setSelectedClientId(null)}>
                 Cerrar ficha

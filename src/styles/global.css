@@ -273,20 +273,6 @@ a {
   border-radius: 14px;
 }
 
-.table-row--button {
-  width: 100%;
-  border: 0;
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
-  border-radius: 12px;
-  padding-inline: 10px;
-}
-
-.table-row--button:hover {
-  background: #f9fafb;
-}
-
 .table-row:last-child {
   border-bottom: 1px solid #eceff3;
 }
@@ -478,6 +464,12 @@ a {
   color: #111827;
 }
 
+.member-card__success--panel p {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
 .member-card__success p {
   margin: 2px 0 0;
   color: var(--success-text);
@@ -548,6 +540,33 @@ a {
   display: grid;
   gap: 6px;
   color: var(--muted);
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.detail-card {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e8edf3;
+}
+
+.detail-label {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.detail-card strong {
+  font-size: 0.95rem;
+  color: #1f2937;
 }
 
 
@@ -632,6 +651,10 @@ a {
 
   .member-card__media {
     min-height: 180px;
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
   }
 
   .member-card--panel {
