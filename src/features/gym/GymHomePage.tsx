@@ -409,15 +409,12 @@ export function GymHomePage() {
                     <button type="button" className="table-row table-row--button" key={client.id} onClick={() => setSelectedClientId(client.id)}>
                       <div className="client-cell">
                         <strong>{client.name}</strong>
-                        <span>Tocar para ver ficha</span>
                       </div>
                       <div className="client-cell client-cell--dates">
                         <strong>{formatDate(client.enrolledAt)}</strong>
-                        <span>Fecha de ingreso</span>
                       </div>
                       <div className="table-status">
                         <span className={`status-pill status-pill--${status}`}>{getStatusLabel(status)} {formatDate(client.nextPaymentDate)}</span>
-                        <span className="status-note">{getPaymentText(client.nextPaymentDate)}</span>
                       </div>
                     </button>
                   );
