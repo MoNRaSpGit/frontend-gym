@@ -166,7 +166,7 @@ function getStatusLabel(status: ClientStatus) {
     case "upcoming":
       return "Vence";
     case "overdue":
-      return "Vencido";
+      return "Vence";
     default:
       return "Vence";
   }
@@ -534,9 +534,14 @@ export function GymHomePage() {
                     <strong>{client.name}</strong>
                     <span>Vence {formatDate(client.nextPaymentDate)}</span>
                   </div>
-                  <button type="button" className="button button--solid" onClick={() => handleQuickPayment(client.id)}>
-                    Registrar pago
-                  </button>
+                  <div className="collection-actions">
+                    <button type="button" className="button button--ghost" onClick={() => setSelectedClientId(client.id)}>
+                      Ver ficha
+                    </button>
+                    <button type="button" className="button button--solid" onClick={() => handleQuickPayment(client.id)}>
+                      Registrar pago
+                    </button>
+                  </div>
                 </div>
               ))}
               {collectionsSummary.dueToday.length === 0 ? <p className="empty-copy">No hay clientes venciendo hoy.</p> : null}

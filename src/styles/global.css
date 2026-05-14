@@ -242,6 +242,11 @@ a {
   gap: 4px;
 }
 
+.collection-actions {
+  display: flex;
+  gap: 10px;
+}
+
 .collection-main span,
 .empty-copy {
   color: var(--muted);
@@ -339,8 +344,8 @@ a {
 }
 
 .status-pill--overdue {
-  background: var(--overdue-bg);
-  color: var(--overdue-text);
+  background: var(--red-bg);
+  color: var(--red-text);
 }
 
 .status-note {
