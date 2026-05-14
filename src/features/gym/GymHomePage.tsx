@@ -109,11 +109,7 @@ const demoMemberCard: DemoMemberCard = {
   cedula: "52349876"
 };
 
-const demoMovements: MovementItem[] = [
-  { id: "m-001", clientName: "Juan Perez", amount: "+ $500", dateTime: "2026-05-14T09:10:00", plan: "Plan estandar", kind: "payment" },
-  { id: "m-002", clientName: "Camila Suarez", amount: "+ $1.900", dateTime: "2026-05-14T10:35:00", plan: "Plan 3 meses", kind: "payment" },
-  { id: "m-003", clientName: "Lucia Silva", amount: "Nuevo cliente", dateTime: "2026-05-13T18:20:00", plan: "Plan 6 meses", kind: "signup" }
-];
+const demoMovements: MovementItem[] = [];
 
 function parseLocalDate(value: string) {
   return new Date(`${value}T00:00:00`);
@@ -613,14 +609,9 @@ export function GymHomePage() {
                       className={`collection-row collection-row--expandable ${isExpanded ? "collection-row--expanded" : ""}`}
                       onClick={() => setExpandedMovementId(isExpanded ? null : movement.id)}
                     >
-                    <div className="collection-main">
-                      <strong>{title}</strong>
-                      {isExpanded ? (
-                        <span className="collection-detail">
-                          {formatDateTime(movement.dateTime)} · {movement.plan}
-                        </span>
-                      ) : null}
-                    </div>
+                      <div className="collection-main">
+                        <strong>{title}</strong>
+                      </div>
                       <span className="collection-amount">{movement.amount}</span>
                     </button>
                     {isExpanded ? (
@@ -632,6 +623,7 @@ export function GymHomePage() {
                   </div>
                 );
               })}
+              {movements.length === 0 ? <p className="empty-copy">Sin movimientos todavia.</p> : null}
             </div>
           </article>
         </section>
