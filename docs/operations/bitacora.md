@@ -1,6 +1,19 @@
 # Bitacora Gym
 
-## 2026-05-14
+Fecha de actualizacion: 2026-05-16
+
+## Regla de este archivo
+
+Este documento guarda detalle fino del modulo `gym`.
+
+Aca corresponde anotar:
+
+- que se hizo en el frontend
+- donde quedo el modulo
+- que demo funcional ya existe
+- que validaciones tecnicas pasaron
+
+## 2026-05-14 - scaffold inicial
 
 Se crea el scaffold inicial de `frontend-gym`.
 
@@ -12,6 +25,8 @@ Incluye:
 - build metadata (`app-build.json`)
 - service worker simple
 - estilos globales iniciales
+
+## 2026-05-14 - demo comercial funcional
 
 Se evoluciona la home a demo comercial funcional.
 
