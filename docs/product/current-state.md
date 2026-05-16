@@ -15,6 +15,7 @@ El modulo ya tiene:
 - placeholder de home ya evolucionado
 - aviso de actualizacion
 - base visual lista para crecer
+- estructura separada por capas dentro del feature `gym`
 
 ## Flujo visible actual
 
@@ -34,6 +35,7 @@ Hoy el modulo:
 - sigue sin integracion backend real
 - funciona como demo comercial de producto
 - sirve para validar lectura operativa inicial del negocio
+- evita mezclar toda la logica y la UI en una sola pagina grande
 
 ## Siguiente paso recomendado
 

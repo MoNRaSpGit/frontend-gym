@@ -38,3 +38,18 @@ Incluye:
 - movimiento reciente para mostrar altas, pagos, bajas e ingresos
 - flujo de recepcion para tablet con teclado numerico por cedula
 - check-in que marca al cliente como presente en el panel
+
+## 2026-05-16 - Refactor por capas del modulo gym
+
+Se ordena el modulo para evitar una pagina unica con demasiada logica, UI y estilos mezclados.
+
+Incluye:
+
+- separacion de `types`, `data`, `lib`, `hooks`, `components` y `styles`
+- `GymHomePage` reducido a composicion de vistas
+- estilos del feature movidos a `features/gym/styles/gym-home.css`
+- `global.css` reducido a base realmente global
+
+Objetivo:
+
+- dejar una base mas mantenible para seguir creciendo el modulo sin ruido tecnico
