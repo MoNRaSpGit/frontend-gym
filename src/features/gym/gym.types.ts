@@ -100,7 +100,7 @@ export const GYM_MOVEMENT_TYPE_LABELS: Record<GymMovementType, string> = {
 
 export const GYM_TASK_COLOR_LABELS: Record<GymTaskColor, string> = {
   green: "Básica",
-  yellow: "Más o menos",
+  yellow: "Media",
   red: "Importante"
 };
 

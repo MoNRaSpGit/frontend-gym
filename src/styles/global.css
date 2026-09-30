@@ -281,14 +281,17 @@ button {
 
 .gym-task-card--green {
   border-left-color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 14%, var(--color-surface-alt));
 }
 
 .gym-task-card--yellow {
   border-left-color: var(--color-warning);
+  background: color-mix(in srgb, var(--color-warning) 14%, var(--color-surface-alt));
 }
 
 .gym-task-card--red {
   border-left-color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 14%, var(--color-surface-alt));
 }
 
 .gym-task-card-actions {
