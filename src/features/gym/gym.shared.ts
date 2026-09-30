@@ -51,11 +51,20 @@ export function generateId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+// "Cada 30 dias" se toma como mensual de calendario (30/10 -> 30/11, no
+// 29/11); lo mismo 60/90/... Cualquier otro numero suma dias exactos.
+export function addExpenseInterval(fromIso: string, intervalDays: number): string {
+  if (intervalDays % 30 === 0) return addMonths(fromIso, intervalDays / 30);
+  return addDays(fromIso, intervalDays);
+}
+
+// Pedido explicito (30/09/2026): el dia de vencimiento queda fijo -- si
+// vence el 30/10 y se marca pagado el 25/10 (o tarde), pasa a 30/11. Se
+// cuenta desde el vencimiento, no desde el dia en que se marca.
 export function computeExpenseAfterPayment<T extends { intervalDays: number; dueDate: string; lastPaidAt: string | null }>(
   expense: T
 ): T {
-  const today = getTodayDate();
-  return { ...expense, dueDate: addDays(today, expense.intervalDays), lastPaidAt: today };
+  return { ...expense, dueDate: addExpenseInterval(expense.dueDate, expense.intervalDays), lastPaidAt: getTodayDate() };
 }
 
 // Suma meses respetando fin de mes (31/01 + 1 mes = 28/02, no 03/03).

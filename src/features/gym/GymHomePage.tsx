@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { fetchGymWorkspace, GymUnauthorizedError, saveGymWorkspace } from "./gym.client";
-import { computeExpenseAfterPayment, generateId, getRenewedDueDate, getStudentStatus, getTodayDate } from "./gym.shared";
+import { addExpenseInterval, computeExpenseAfterPayment, generateId, getRenewedDueDate, getStudentStatus, getTodayDate } from "./gym.shared";
 import type {
   GymAuditAction,
   GymAuditEntry,
@@ -112,15 +112,13 @@ export function GymHomePage({ userName, onLogout, onSessionExpired }: GymHomePag
 
   function handleCreateExpense(input: { name: string; amount: number; intervalDays: number }) {
     const today = getTodayDate();
-    const due = new Date(`${today}T00:00:00`);
-    due.setDate(due.getDate() + input.intervalDays);
 
     const expense: GymExpense = {
       id: generateId("exp"),
       name: input.name,
       amount: input.amount,
       intervalDays: input.intervalDays,
-      dueDate: due.toISOString().slice(0, 10),
+      dueDate: addExpenseInterval(today, input.intervalDays),
       lastPaidAt: null,
       createdAt: new Date().toISOString()
     };

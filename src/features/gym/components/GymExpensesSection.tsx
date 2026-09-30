@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { formatMoney, formatShortDate, getDaysUntilDue } from "../gym.shared";
+import { addExpenseInterval, formatMoney, formatShortDate, getDaysUntilDue } from "../gym.shared";
 import type { GymExpense } from "../gym.types";
 
 type GymExpensesSectionProps = {
@@ -13,6 +13,7 @@ export function GymExpensesSection({ expenses, onCreate, onMarkPaid, onDelete }:
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [intervalDays, setIntervalDays] = useState("30");
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -85,12 +86,36 @@ export function GymExpensesSection({ expenses, onCreate, onMarkPaid, onDelete }:
                   )}
                 </div>
                 <div className="gym-expense-card-actions">
-                  <button type="button" className="gym-ghost-button" onClick={() => onMarkPaid(expense.id)}>
-                    Marcar pagado
-                  </button>
-                  <button type="button" className="gym-ghost-button gym-ghost-button--danger" onClick={() => onDelete(expense.id)}>
-                    Borrar
-                  </button>
+                  {confirmingId === expense.id ? (
+                    <div className="gym-confirm">
+                      <span>
+                        ¿Pagado? Próximo vencimiento{" "}
+                        <strong>{formatShortDate(addExpenseInterval(expense.dueDate, expense.intervalDays))}</strong>
+                      </span>
+                      <button
+                        type="button"
+                        className="gym-primary-button gym-primary-button--small"
+                        onClick={() => {
+                          onMarkPaid(expense.id);
+                          setConfirmingId(null);
+                        }}
+                      >
+                        Confirmar
+                      </button>
+                      <button type="button" className="gym-ghost-button" onClick={() => setConfirmingId(null)}>
+                        No
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <button type="button" className="gym-ghost-button" onClick={() => setConfirmingId(expense.id)}>
+                        Marcar pagado
+                      </button>
+                      <button type="button" className="gym-ghost-button gym-ghost-button--danger" onClick={() => onDelete(expense.id)}>
+                        Borrar
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             );
