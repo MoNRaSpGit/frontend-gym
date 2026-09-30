@@ -368,3 +368,360 @@ button {
     justify-items: start;
   }
 }
+
+/* Alumnos */
+.gym-students-toolbar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.gym-search-input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  padding: 11px 14px;
+  font-size: 14px;
+}
+
+.gym-search-input:focus,
+.gym-field input:focus,
+.gym-field select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.gym-primary-button--small {
+  padding: 8px 14px;
+  font-size: 13px;
+}
+
+.gym-icon-button {
+  border: 0;
+  background: transparent;
+  color: var(--color-muted);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+
+.gym-icon-button:hover {
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+}
+
+.gym-student-form {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid var(--color-accent-dark);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  animation: gym-slide-in 0.18s ease-out;
+}
+
+@keyframes gym-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.gym-student-form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.gym-student-form-header h3 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.gym-student-form-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.gym-field {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+.gym-field--wide {
+  grid-column: span 2;
+}
+
+.gym-field input,
+.gym-field select {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  padding: 10px;
+  font-size: 14px;
+  width: 100%;
+  color-scheme: dark;
+}
+
+@media (max-width: 720px) {
+  .gym-student-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 460px) {
+  .gym-student-form-grid {
+    grid-template-columns: 1fr;
+  }
+  .gym-field--wide {
+    grid-column: auto;
+  }
+}
+
+.gym-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.gym-checkbox input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-accent);
+}
+
+.gym-student-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.gym-status-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.gym-status-chip {
+  --chip-color: var(--color-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 7px 14px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.gym-status-chip strong {
+  color: var(--chip-color);
+}
+
+.gym-status-chip--green {
+  --chip-color: var(--color-success);
+}
+
+.gym-status-chip--yellow {
+  --chip-color: var(--color-warning);
+}
+
+.gym-status-chip--red {
+  --chip-color: var(--color-danger);
+}
+
+.gym-status-chip--active {
+  border-color: var(--chip-color);
+  background: color-mix(in srgb, var(--chip-color) 14%, var(--color-surface));
+}
+
+.gym-status-chip:not(.gym-status-chip--green):not(.gym-status-chip--yellow):not(.gym-status-chip--red).gym-status-chip--active {
+  border-color: var(--color-accent);
+}
+
+.gym-status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--chip-color);
+}
+
+.gym-student-list {
+  display: grid;
+  gap: 10px;
+}
+
+.gym-student-card {
+  --status-color: var(--color-success);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas:
+    "avatar info due"
+    "avatar actions actions";
+  align-items: center;
+  gap: 10px 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border);
+  border-left: 5px solid var(--status-color);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.gym-student-card--yellow {
+  --status-color: var(--color-warning);
+}
+
+.gym-student-card--red {
+  --status-color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 7%, var(--color-surface));
+}
+
+.gym-student-avatar {
+  grid-area: avatar;
+  align-self: start;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 17px;
+  color: var(--status-color);
+  background: color-mix(in srgb, var(--status-color) 16%, transparent);
+}
+
+.gym-student-info {
+  grid-area: info;
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.gym-student-name {
+  font-size: 16px;
+}
+
+.gym-student-meta,
+.gym-student-note {
+  font-size: 13px;
+  color: var(--color-muted);
+  overflow-wrap: anywhere;
+}
+
+.gym-student-note {
+  font-style: italic;
+}
+
+.gym-student-due {
+  grid-area: due;
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+  text-align: right;
+}
+
+.gym-due-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.gym-due-pill::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.gym-due-pill--green {
+  color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 16%, transparent);
+}
+
+.gym-due-pill--yellow {
+  color: var(--color-warning);
+  background: color-mix(in srgb, var(--color-warning) 18%, transparent);
+}
+
+.gym-due-pill--red {
+  color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 18%, transparent);
+}
+
+.gym-student-actions {
+  grid-area: actions;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.gym-student-actions a {
+  text-decoration: none;
+}
+
+.gym-ghost-button--whatsapp {
+  border-color: rgba(37, 211, 102, 0.4);
+  color: #25d366;
+}
+
+.gym-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.gym-empty-state {
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  text-align: center;
+  padding: 40px 16px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius);
+}
+
+@media (max-width: 560px) {
+  .gym-students-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .gym-student-card {
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      "avatar info"
+      "due due"
+      "actions actions";
+  }
+  .gym-student-due {
+    justify-items: start;
+    text-align: left;
+    grid-auto-flow: column;
+    align-items: center;
+    justify-content: start;
+    gap: 10px;
+  }
+}

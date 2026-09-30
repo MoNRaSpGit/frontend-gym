@@ -1,5 +1,15 @@
+import { GYM_STUDENT_PLAN_MONTHS, type GymStudent } from "./gym.types";
+
+// Fecha local (no UTC): con toISOString, despues de las 21hs de Uruguay
+// ya daba el dia siguiente.
+function toLocalIsoDate(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
 export function getTodayDate(): string {
-  return new Date().toISOString().slice(0, 10);
+  return toLocalIsoDate(new Date());
 }
 
 export function formatMoney(value: number): string {
@@ -30,7 +40,7 @@ export function getDaysUntilDue(dueDate: string): number {
 export function addDays(fromIso: string, days: number): string {
   const date = new Date(`${fromIso}T00:00:00`);
   date.setDate(date.getDate() + days);
-  return date.toISOString().slice(0, 10);
+  return toLocalIsoDate(date);
 }
 
 export function getYearMonth(dateIso: string): string {
@@ -46,4 +56,32 @@ export function computeExpenseAfterPayment<T extends { intervalDays: number; due
 ): T {
   const today = getTodayDate();
   return { ...expense, dueDate: addDays(today, expense.intervalDays), lastPaidAt: today };
+}
+
+// Suma meses respetando fin de mes (31/01 + 1 mes = 28/02, no 03/03).
+export function addMonths(fromIso: string, months: number): string {
+  const [year, month, day] = fromIso.split("-").map(Number);
+  const target = new Date(year, month - 1 + months, 1);
+  const lastDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
+  target.setDate(Math.min(day, lastDay));
+  return toLocalIsoDate(target);
+}
+
+export type StudentStatus = "green" | "yellow" | "red";
+
+// Semaforo (pedido explicito): rojo el dia del vencimiento o vencido,
+// amarillo cuando falta 1 semana o menos, verde el resto.
+export function getStudentStatus(dueDate: string): StudentStatus {
+  const daysLeft = getDaysUntilDue(dueDate);
+  if (daysLeft <= 0) return "red";
+  if (daysLeft <= 7) return "yellow";
+  return "green";
+}
+
+// Si renueva antes de vencer, el nuevo periodo arranca desde el vencimiento
+// actual (no pierde dias); si ya vencio, arranca desde hoy.
+export function getRenewedDueDate(student: GymStudent): string {
+  const today = getTodayDate();
+  const base = student.dueDate > today ? student.dueDate : today;
+  return addMonths(base, GYM_STUDENT_PLAN_MONTHS[student.plan]);
 }

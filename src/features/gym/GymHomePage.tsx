@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { fetchGymWorkspace, saveGymWorkspace } from "./gym.client";
-import { computeExpenseAfterPayment, generateId, getTodayDate } from "./gym.shared";
+import { computeExpenseAfterPayment, generateId, getRenewedDueDate, getTodayDate } from "./gym.shared";
 import type {
   GymAuditAction,
   GymAuditEntry,
   GymExpense,
   GymMovement,
   GymMovementType,
+  GymStudent,
   GymTask,
   GymTaskColor,
   GymWorkspaceData
@@ -15,19 +16,21 @@ import type {
 import { GymExpensesSection } from "./components/GymExpensesSection";
 import { GymTasksSection } from "./components/GymTasksSection";
 import { GymSummarySection } from "./components/GymSummarySection";
+import { GymStudentsSection, type GymStudentInput } from "./components/GymStudentsSection";
 
-type GymTab = "gastos" | "tareas" | "resumen";
+type GymTab = "alumnos" | "gastos" | "tareas" | "resumen";
 
 const TAB_LABELS: Record<GymTab, string> = {
+  alumnos: "Alumnos",
   gastos: "Gastos",
   tareas: "Tareas",
   resumen: "Resumen"
 };
 
-const EMPTY_DATA: GymWorkspaceData = { expenses: [], tasks: [], movements: [], auditLog: [] };
+const EMPTY_DATA: GymWorkspaceData = { expenses: [], tasks: [], movements: [], students: [], auditLog: [] };
 
 export function GymHomePage() {
-  const [tab, setTab] = useState<GymTab>("gastos");
+  const [tab, setTab] = useState<GymTab>("alumnos");
   const [data, setData] = useState<GymWorkspaceData>(EMPTY_DATA);
   const [rowVersion, setRowVersion] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -39,7 +42,7 @@ export function GymHomePage() {
     fetchGymWorkspace()
       .then((snapshot) => {
         if (cancelled) return;
-        setData(snapshot.data);
+        setData({ ...snapshot.data, students: snapshot.data.students ?? [] });
         setRowVersion(snapshot.rowVersion);
         setLoadError(null);
       })
@@ -218,6 +221,90 @@ export function GymHomePage() {
     }));
   }
 
+  function handleCreateStudent(input: GymStudentInput, paidNow: boolean) {
+    const now = new Date().toISOString();
+    const today = getTodayDate();
+    const student: GymStudent = {
+      id: generateId("stu"),
+      ...input,
+      lastPaidAt: paidNow ? today : null,
+      createdAt: now
+    };
+
+    // Alta de alumno = "Cliente nuevo" en Resumen (pedido explicito) y, si
+    // ya pago, tambien el cobro de la primera cuota.
+    const newMovements: GymMovement[] = [
+      { id: generateId("mov"), date: today, type: "cliente_nuevo", amount: null, note: student.name, createdAt: now }
+    ];
+    if (paidNow) {
+      newMovements.unshift({
+        id: generateId("mov"),
+        date: today,
+        type: "cobro",
+        amount: student.fee,
+        note: `Cuota: ${student.name}`,
+        createdAt: now
+      });
+    }
+
+    setData((current) => ({
+      ...current,
+      students: [student, ...current.students],
+      movements: [...newMovements, ...current.movements],
+      auditLog: [addAudit("student_created", `Alumno registrado: ${student.name} (vence ${student.dueDate})`), ...current.auditLog]
+    }));
+    toast.success(`${student.name} registrado.`);
+  }
+
+  function handleUpdateStudent(studentId: string, input: GymStudentInput) {
+    setData((current) => {
+      const student = current.students.find((item) => item.id === studentId);
+      if (!student) return current;
+      return {
+        ...current,
+        students: current.students.map((item) => (item.id === studentId ? { ...item, ...input } : item)),
+        auditLog: [addAudit("student_updated", `Alumno editado: ${input.name} (vence ${input.dueDate})`), ...current.auditLog]
+      };
+    });
+    toast.success("Cambios guardados.");
+  }
+
+  function handleRenewStudent(studentId: string) {
+    const student = data.students.find((item) => item.id === studentId);
+    if (!student) return;
+    const today = getTodayDate();
+    const nextDueDate = getRenewedDueDate(student);
+    const movement: GymMovement = {
+      id: generateId("mov"),
+      date: today,
+      type: "cobro",
+      amount: student.fee,
+      note: `Cuota: ${student.name}`,
+      createdAt: new Date().toISOString()
+    };
+
+    setData((current) => ({
+      ...current,
+      students: current.students.map((item) =>
+        item.id === studentId ? { ...item, dueDate: nextDueDate, lastPaidAt: today } : item
+      ),
+      movements: [movement, ...current.movements],
+      auditLog: [addAudit("student_renewed", `Alumno renovado: ${student.name} (nuevo vencimiento ${nextDueDate})`), ...current.auditLog]
+    }));
+    toast.success(`${student.name} renovado.`);
+  }
+
+  function handleDeleteStudent(studentId: string) {
+    setData((current) => {
+      const student = current.students.find((item) => item.id === studentId);
+      return {
+        ...current,
+        students: current.students.filter((item) => item.id !== studentId),
+        auditLog: student ? [addAudit("student_deleted", `Alumno borrado: ${student.name}`), ...current.auditLog] : current.auditLog
+      };
+    });
+  }
+
   if (isLoading) {
     return (
       <div className="gym-shell">
@@ -254,6 +341,15 @@ export function GymHomePage() {
       </nav>
 
       <main className="gym-main">
+        {tab === "alumnos" ? (
+          <GymStudentsSection
+            students={data.students}
+            onCreate={handleCreateStudent}
+            onUpdate={handleUpdateStudent}
+            onRenew={handleRenewStudent}
+            onDelete={handleDeleteStudent}
+          />
+        ) : null}
         {tab === "gastos" ? (
           <GymExpensesSection
             expenses={data.expenses}
