@@ -1,0 +1,274 @@
+import { useEffect, useRef, useState } from "react";
+import { toast } from "react-toastify";
+import { fetchGymWorkspace, saveGymWorkspace } from "./gym.client";
+import { computeExpenseAfterPayment, generateId, getTodayDate } from "./gym.shared";
+import type {
+  GymAuditAction,
+  GymAuditEntry,
+  GymExpense,
+  GymMovement,
+  GymMovementType,
+  GymTask,
+  GymTaskColor,
+  GymWorkspaceData
+} from "./gym.types";
+import { GymExpensesSection } from "./components/GymExpensesSection";
+import { GymTasksSection } from "./components/GymTasksSection";
+import { GymSummarySection } from "./components/GymSummarySection";
+
+type GymTab = "gastos" | "tareas" | "resumen";
+
+const TAB_LABELS: Record<GymTab, string> = {
+  gastos: "Gastos",
+  tareas: "Tareas",
+  resumen: "Resumen"
+};
+
+const EMPTY_DATA: GymWorkspaceData = { expenses: [], tasks: [], movements: [], auditLog: [] };
+
+export function GymHomePage() {
+  const [tab, setTab] = useState<GymTab>("gastos");
+  const [data, setData] = useState<GymWorkspaceData>(EMPTY_DATA);
+  const [rowVersion, setRowVersion] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const skipNextSaveRef = useRef(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchGymWorkspace()
+      .then((snapshot) => {
+        if (cancelled) return;
+        setData(snapshot.data);
+        setRowVersion(snapshot.rowVersion);
+        setLoadError(null);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setLoadError(error instanceof Error ? error.message : "No se pudo cargar la información.");
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Autoguardado (1.2s de silencio, mismo criterio que agro) -- evita
+  // guardar en cada tecla y evita el primer guardado espurio al cargar.
+  useEffect(() => {
+    if (skipNextSaveRef.current) {
+      skipNextSaveRef.current = false;
+      return;
+    }
+    if (isLoading) return;
+
+    const timeoutId = window.setTimeout(() => {
+      saveGymWorkspace(data, rowVersion)
+        .then((snapshot) => {
+          setRowVersion(snapshot.rowVersion);
+        })
+        .catch((error) => {
+          toast.error(error instanceof Error ? error.message : "No se pudo guardar.");
+        });
+    }, 1200);
+
+    return () => window.clearTimeout(timeoutId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data]);
+
+  function addAudit(action: GymAuditAction, details: string) {
+    const entry: GymAuditEntry = {
+      id: generateId("audit"),
+      action,
+      timestamp: new Date().toISOString(),
+      details
+    };
+    return entry;
+  }
+
+  function handleCreateExpense(input: { name: string; amount: number; intervalDays: number }) {
+    const today = getTodayDate();
+    const due = new Date(`${today}T00:00:00`);
+    due.setDate(due.getDate() + input.intervalDays);
+
+    const expense: GymExpense = {
+      id: generateId("exp"),
+      name: input.name,
+      amount: input.amount,
+      intervalDays: input.intervalDays,
+      dueDate: due.toISOString().slice(0, 10),
+      lastPaidAt: null,
+      createdAt: new Date().toISOString()
+    };
+
+    setData((current) => ({
+      ...current,
+      expenses: [expense, ...current.expenses],
+      auditLog: [addAudit("expense_created", `Gasto creado: ${expense.name} (${expense.intervalDays} días)`), ...current.auditLog]
+    }));
+    toast.success("Gasto agregado.");
+  }
+
+  function handleMarkExpensePaid(expenseId: string) {
+    setData((current) => {
+      const expense = current.expenses.find((item) => item.id === expenseId);
+      if (!expense) return current;
+
+      const updatedExpense = computeExpenseAfterPayment(expense);
+      const movement: GymMovement = {
+        id: generateId("mov"),
+        date: getTodayDate(),
+        type: "gasto",
+        amount: expense.amount,
+        note: `Pago: ${expense.name}`,
+        createdAt: new Date().toISOString()
+      };
+
+      return {
+        ...current,
+        expenses: current.expenses.map((item) => (item.id === expenseId ? updatedExpense : item)),
+        movements: [movement, ...current.movements],
+        auditLog: [addAudit("expense_paid", `Gasto pagado: ${expense.name}`), ...current.auditLog]
+      };
+    });
+    toast.success("Gasto marcado como pagado.");
+  }
+
+  function handleDeleteExpense(expenseId: string) {
+    setData((current) => {
+      const expense = current.expenses.find((item) => item.id === expenseId);
+      return {
+        ...current,
+        expenses: current.expenses.filter((item) => item.id !== expenseId),
+        auditLog: expense
+          ? [addAudit("expense_deleted", `Gasto borrado: ${expense.name}`), ...current.auditLog]
+          : current.auditLog
+      };
+    });
+  }
+
+  function handleCreateTask(input: { title: string; color: GymTaskColor }) {
+    const task: GymTask = {
+      id: generateId("task"),
+      title: input.title,
+      color: input.color,
+      status: "todo",
+      createdAt: new Date().toISOString()
+    };
+    setData((current) => ({
+      ...current,
+      tasks: [task, ...current.tasks],
+      auditLog: [addAudit("task_created", `Tarea creada: ${task.title}`), ...current.auditLog]
+    }));
+  }
+
+  function handleMoveTask(taskId: string, direction: "forward" | "backward") {
+    setData((current) => {
+      const order: GymTask["status"][] = ["todo", "in_progress", "done"];
+      const task = current.tasks.find((item) => item.id === taskId);
+      if (!task) return current;
+
+      const currentIndex = order.indexOf(task.status);
+      const nextIndex = direction === "forward" ? currentIndex + 1 : currentIndex - 1;
+      if (nextIndex < 0 || nextIndex >= order.length) return current;
+
+      const nextStatus = order[nextIndex];
+      return {
+        ...current,
+        tasks: current.tasks.map((item) => (item.id === taskId ? { ...item, status: nextStatus } : item)),
+        auditLog: [addAudit("task_moved", `Tarea "${task.title}" movida a ${nextStatus}`), ...current.auditLog]
+      };
+    });
+  }
+
+  function handleDeleteTask(taskId: string) {
+    setData((current) => {
+      const task = current.tasks.find((item) => item.id === taskId);
+      return {
+        ...current,
+        tasks: current.tasks.filter((item) => item.id !== taskId),
+        auditLog: task ? [addAudit("task_deleted", `Tarea borrada: ${task.title}`), ...current.auditLog] : current.auditLog
+      };
+    });
+  }
+
+  function handleCreateMovement(input: { type: GymMovementType; amount: number | null; note: string }) {
+    const movement: GymMovement = {
+      id: generateId("mov"),
+      date: getTodayDate(),
+      type: input.type,
+      amount: input.amount,
+      note: input.note,
+      createdAt: new Date().toISOString()
+    };
+    setData((current) => ({
+      ...current,
+      movements: [movement, ...current.movements],
+      auditLog: [addAudit("movement_created", `Movimiento: ${input.type}${input.note ? " · " + input.note : ""}`), ...current.auditLog]
+    }));
+  }
+
+  function handleDeleteMovement(movementId: string) {
+    setData((current) => ({
+      ...current,
+      movements: current.movements.filter((item) => item.id !== movementId),
+      auditLog: [addAudit("movement_deleted", "Movimiento borrado"), ...current.auditLog]
+    }));
+  }
+
+  if (isLoading) {
+    return (
+      <div className="gym-shell">
+        <p className="gym-hint">Cargando...</p>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="gym-shell">
+        <p className="gym-error">{loadError}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="gym-page">
+      <header className="gym-header">
+        <h1>Gym</h1>
+      </header>
+
+      <nav className="gym-tabs">
+        {(Object.keys(TAB_LABELS) as GymTab[]).map((item) => (
+          <button
+            key={item}
+            type="button"
+            className={tab === item ? "gym-tab-button gym-tab-button--active" : "gym-tab-button"}
+            onClick={() => setTab(item)}
+          >
+            {TAB_LABELS[item]}
+          </button>
+        ))}
+      </nav>
+
+      <main className="gym-main">
+        {tab === "gastos" ? (
+          <GymExpensesSection
+            expenses={data.expenses}
+            onCreate={handleCreateExpense}
+            onMarkPaid={handleMarkExpensePaid}
+            onDelete={handleDeleteExpense}
+          />
+        ) : null}
+        {tab === "tareas" ? (
+          <GymTasksSection tasks={data.tasks} onCreate={handleCreateTask} onMove={handleMoveTask} onDelete={handleDeleteTask} />
+        ) : null}
+        {tab === "resumen" ? (
+          <GymSummarySection movements={data.movements} onCreate={handleCreateMovement} onDelete={handleDeleteMovement} />
+        ) : null}
+      </main>
+    </div>
+  );
+}
