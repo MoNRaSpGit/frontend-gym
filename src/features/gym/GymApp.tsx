@@ -1,34 +1,57 @@
 import { useState } from "react";
-import { toast } from "react-toastify";
-import { loginGym } from "./gym.client";
+import { loginGym, logoutGym } from "./gym.client";
 import { GymHomePage } from "./GymHomePage";
 import { GymLoginScreen } from "./components/GymLoginScreen";
-import { hasGymSession, saveGymSession } from "./gym.session";
+import { clearGymSession, loadGymSession, saveGymSession, type GymSession } from "./gym.session";
 
-// Arranque del proyecto (16/09/2026) -- ahora con las 3 pestanas reales:
-// Gastos, Tareas y Resumen (30/09/2026, pedido explicito del cliente).
-// Login "pasa directo" a proposito (fase de pruebas, sin usuario/
-// contraseña todavia) -- ver gym.session.ts.
+// Login con usuario y contraseña desde 30/09/2026 (antes "pasaba
+// directo" en fase de pruebas).
 export function GymApp() {
-  const [isLoggedIn, setIsLoggedIn] = useState(hasGymSession());
+  const [session, setSession] = useState<GymSession | null>(loadGymSession);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
 
-  async function handleIngresar() {
+  async function handleLogin(username: string, password: string) {
     setIsLoggingIn(true);
+    setLoginError(null);
     try {
-      await loginGym();
-      saveGymSession();
-      setIsLoggedIn(true);
+      const next = await loginGym(username, password);
+      saveGymSession(next);
+      setSession(next);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "No se pudo entrar.");
+      setLoginError(error instanceof Error ? error.message : "No se pudo iniciar sesión.");
     } finally {
       setIsLoggingIn(false);
     }
   }
 
-  if (!isLoggedIn) {
-    return <GymLoginScreen onIngresar={() => void handleIngresar()} isLoading={isLoggingIn} />;
+  function handleLogout() {
+    void logoutGym();
+    clearGymSession();
+    setSession(null);
   }
 
-  return <GymHomePage />;
+  function handleSessionExpired() {
+    clearGymSession();
+    setSession(null);
+    setLoginError("Tu sesión venció. Volvé a iniciar sesión.");
+  }
+
+  if (!session) {
+    return (
+      <GymLoginScreen
+        onLogin={(username, password) => void handleLogin(username, password)}
+        isLoading={isLoggingIn}
+        error={loginError}
+      />
+    );
+  }
+
+  return (
+    <GymHomePage
+      userName={session.user.fullName ?? session.user.username}
+      onLogout={handleLogout}
+      onSessionExpired={handleSessionExpired}
+    />
+  );
 }

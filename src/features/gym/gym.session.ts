@@ -1,30 +1,48 @@
-// Sesion minima (30/09/2026, fase de pruebas): sin usuario/contraseña
-// todavia -- solo una bandera en localStorage para no mostrar la
-// pantalla de "Ingresar" en cada recarga. Cuando se agregue login de
-// verdad, esto se reemplaza por un token real.
-const GYM_SESSION_KEY = "frontend-gym.session.v1";
+// Sesion real desde 30/09/2026 (antes era solo una bandera de "pasa
+// directo"): token opaco que devuelve POST /gym/auth/login, guardado en
+// localStorage para no pedir usuario/contraseña en cada recarga.
+const GYM_SESSION_KEY = "frontend-gym.session.v2";
 
-export function hasGymSession(): boolean {
+export type GymSessionUser = {
+  id: number;
+  username: string;
+  fullName: string | null;
+};
+
+export type GymSession = {
+  token: string;
+  user: GymSessionUser;
+};
+
+export function loadGymSession(): GymSession | null {
   try {
-    return localStorage.getItem(GYM_SESSION_KEY) === "1";
+    const raw = localStorage.getItem(GYM_SESSION_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as GymSession;
+    return parsed?.token ? parsed : null;
   } catch {
-    return false;
+    return null;
   }
 }
 
-export function saveGymSession(): void {
+export function saveGymSession(session: GymSession): void {
   try {
-    localStorage.setItem(GYM_SESSION_KEY, "1");
+    localStorage.setItem(GYM_SESSION_KEY, JSON.stringify(session));
   } catch {
     // localStorage puede fallar (privado, bloqueado) -- no es critico,
-    // simplemente va a volver a pedir "Ingresar" la proxima vez.
+    // simplemente va a volver a pedir usuario/contraseña la proxima vez.
   }
 }
 
 export function clearGymSession(): void {
   try {
     localStorage.removeItem(GYM_SESSION_KEY);
+    localStorage.removeItem("frontend-gym.session.v1");
   } catch {
     // ver comentario de saveGymSession.
   }
+}
+
+export function getGymToken(): string | null {
+  return loadGymSession()?.token ?? null;
 }

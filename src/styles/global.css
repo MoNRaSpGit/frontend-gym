@@ -70,6 +70,41 @@ button {
   color: var(--color-muted);
 }
 
+.gym-login-card {
+  width: 100%;
+}
+
+.gym-login-field {
+  text-align: left;
+}
+
+.gym-login-card .gym-login-error {
+  color: var(--color-danger);
+  font-size: 14px;
+}
+
+.gym-password-wrap {
+  position: relative;
+}
+
+.gym-password-wrap input {
+  padding-right: 72px;
+}
+
+.gym-password-toggle {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 6px 8px;
+}
+
 /* Botones generales */
 .gym-primary-button {
   border: 0;
@@ -110,6 +145,29 @@ button {
 
 .gym-header {
   padding: 20px 24px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.gym-header-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.gym-header-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 16%, transparent);
 }
 
 .gym-header h1 {

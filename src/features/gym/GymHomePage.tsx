@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
-import { fetchGymWorkspace, saveGymWorkspace } from "./gym.client";
+import { fetchGymWorkspace, GymUnauthorizedError, saveGymWorkspace } from "./gym.client";
 import { computeExpenseAfterPayment, generateId, getRenewedDueDate, getStudentStatus, getTodayDate } from "./gym.shared";
 import type {
   GymAuditAction,
@@ -20,19 +20,25 @@ import { GymSummarySection } from "./components/GymSummarySection";
 import { GymStudentsSection, type GymStudentInput } from "./components/GymStudentsSection";
 import { GymCheckInSection } from "./components/GymCheckInSection";
 
-type GymTab = "ingresar" | "alumnos" | "gastos" | "tareas" | "resumen";
+type GymTab = "alumnos" | "gastos" | "tareas" | "resumen" | "ingresar";
 
 const TAB_LABELS: Record<GymTab, string> = {
-  ingresar: "Ingresar",
   alumnos: "Alumnos",
   gastos: "Gastos",
   tareas: "Tareas",
-  resumen: "Resumen"
+  resumen: "Resumen",
+  ingresar: "Ingresar"
 };
 
 const EMPTY_DATA: GymWorkspaceData = { expenses: [], tasks: [], movements: [], students: [], checkIns: [], auditLog: [] };
 
-export function GymHomePage() {
+type GymHomePageProps = {
+  userName: string;
+  onLogout: () => void;
+  onSessionExpired: () => void;
+};
+
+export function GymHomePage({ userName, onLogout, onSessionExpired }: GymHomePageProps) {
   const [tab, setTab] = useState<GymTab>("alumnos");
   const [data, setData] = useState<GymWorkspaceData>(EMPTY_DATA);
   const [rowVersion, setRowVersion] = useState<number>(0);
@@ -51,6 +57,10 @@ export function GymHomePage() {
       })
       .catch((error) => {
         if (cancelled) return;
+        if (error instanceof GymUnauthorizedError) {
+          onSessionExpired();
+          return;
+        }
         setLoadError(error instanceof Error ? error.message : "No se pudo cargar la información.");
       })
       .finally(() => {
@@ -59,6 +69,8 @@ export function GymHomePage() {
     return () => {
       cancelled = true;
     };
+    // Carga una sola vez al montar (la home se desmonta al cerrar sesion).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Autoguardado (1.2s de silencio, mismo criterio que agro) -- evita
@@ -76,6 +88,10 @@ export function GymHomePage() {
           setRowVersion(snapshot.rowVersion);
         })
         .catch((error) => {
+          if (error instanceof GymUnauthorizedError) {
+            onSessionExpired();
+            return;
+          }
           toast.error(error instanceof Error ? error.message : "No se pudo guardar.");
         });
     }, 1200);
@@ -351,6 +367,13 @@ export function GymHomePage() {
     <div className="gym-page">
       <header className="gym-header">
         <h1>Gym</h1>
+        <div className="gym-header-user">
+          <span className="gym-header-avatar">{userName.charAt(0).toUpperCase()}</span>
+          <span>{userName}</span>
+          <button type="button" className="gym-ghost-button" onClick={onLogout}>
+            Salir
+          </button>
+        </div>
       </header>
 
       <nav className="gym-tabs">
