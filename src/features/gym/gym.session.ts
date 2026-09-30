@@ -1,7 +1,10 @@
-// Sesion real desde 30/09/2026 (antes era solo una bandera de "pasa
-// directo"): token opaco que devuelve POST /gym/auth/login, guardado en
-// localStorage para no pedir usuario/contraseña en cada recarga.
-const GYM_SESSION_KEY = "frontend-gym.session.v2";
+// Sesion real desde 30/09/2026: token opaco que devuelve POST
+// /gym/auth/login. Se guarda en sessionStorage (no localStorage) a
+// proposito -- pedido explicito: "toda persona que entre a la web tenga
+// que pasar por el login". Sobrevive a un F5 en la misma pestaña, pero
+// una pestaña nueva o volver a abrir el navegador pide login de nuevo.
+const GYM_SESSION_KEY = "frontend-gym.session.v3";
+const LEGACY_KEYS = ["frontend-gym.session.v1", "frontend-gym.session.v2"];
 
 export type GymSessionUser = {
   id: number;
@@ -16,7 +19,7 @@ export type GymSession = {
 
 export function loadGymSession(): GymSession | null {
   try {
-    const raw = localStorage.getItem(GYM_SESSION_KEY);
+    const raw = sessionStorage.getItem(GYM_SESSION_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as GymSession;
     return parsed?.token ? parsed : null;
@@ -27,17 +30,17 @@ export function loadGymSession(): GymSession | null {
 
 export function saveGymSession(session: GymSession): void {
   try {
-    localStorage.setItem(GYM_SESSION_KEY, JSON.stringify(session));
+    sessionStorage.setItem(GYM_SESSION_KEY, JSON.stringify(session));
   } catch {
-    // localStorage puede fallar (privado, bloqueado) -- no es critico,
+    // sessionStorage puede fallar (privado, bloqueado) -- no es critico,
     // simplemente va a volver a pedir usuario/contraseña la proxima vez.
   }
 }
 
 export function clearGymSession(): void {
   try {
-    localStorage.removeItem(GYM_SESSION_KEY);
-    localStorage.removeItem("frontend-gym.session.v1");
+    sessionStorage.removeItem(GYM_SESSION_KEY);
+    for (const key of LEGACY_KEYS) localStorage.removeItem(key);
   } catch {
     // ver comentario de saveGymSession.
   }
@@ -45,4 +48,10 @@ export function clearGymSession(): void {
 
 export function getGymToken(): string | null {
   return loadGymSession()?.token ?? null;
+}
+
+try {
+  for (const key of LEGACY_KEYS) localStorage.removeItem(key);
+} catch {
+  // ver comentario de saveGymSession.
 }

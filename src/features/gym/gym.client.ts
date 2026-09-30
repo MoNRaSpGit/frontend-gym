@@ -5,6 +5,9 @@ import type { GymWorkspaceData, GymWorkspaceRecord } from "./gym.types";
 // Sesion vencida o invalida -- la app vuelve a la pantalla de login.
 export class GymUnauthorizedError extends Error {}
 
+// Otro dispositivo/usuario guardo antes (409 por version de fila).
+export class GymConflictError extends Error {}
+
 function buildUrl(path: string) {
   return `${API_BASE_URL}/api/v1${path}`;
 }
@@ -20,6 +23,7 @@ async function readJson<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const message = (data && typeof data.message === "string" ? data.message : null) ?? "Ocurrió un error inesperado.";
     if (response.status === 401) throw new GymUnauthorizedError(message);
+    if (response.status === 409) throw new GymConflictError(message);
     throw new Error(message);
   }
   return data as T;

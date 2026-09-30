@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
-import { fetchGymWorkspace, GymUnauthorizedError, saveGymWorkspace } from "./gym.client";
+import { fetchGymWorkspace, GymConflictError, GymUnauthorizedError, saveGymWorkspace } from "./gym.client";
 import { addExpenseInterval, computeExpenseAfterPayment, generateId, getRenewedDueDate, getStudentStatus, getTodayDate } from "./gym.shared";
 import type {
   GymAuditAction,
@@ -41,10 +41,10 @@ type GymHomePageProps = {
 export function GymHomePage({ userName, onLogout, onSessionExpired }: GymHomePageProps) {
   const [tab, setTab] = useState<GymTab>("alumnos");
   const [data, setData] = useState<GymWorkspaceData>(EMPTY_DATA);
-  const [rowVersion, setRowVersion] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const skipNextSaveRef = useRef(true);
+  const rowVersionRef = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -52,7 +52,7 @@ export function GymHomePage({ userName, onLogout, onSessionExpired }: GymHomePag
       .then((snapshot) => {
         if (cancelled) return;
         setData({ ...snapshot.data, students: snapshot.data.students ?? [], checkIns: snapshot.data.checkIns ?? [] });
-        setRowVersion(snapshot.rowVersion);
+        rowVersionRef.current = snapshot.rowVersion;
         setLoadError(null);
       })
       .catch((error) => {
@@ -73,6 +73,65 @@ export function GymHomePage({ userName, onLogout, onSessionExpired }: GymHomePag
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Bug 30/09/2026 ("agrego un alumno, lo borro, sale el cartel de que
+  // alguien ya guardo y con F5 vuelve a aparecer"): el guardado usaba la
+  // version de fila capturada en el render, asi que dos cambios seguidos
+  // mandaban la version vieja y el servidor lo tomaba como conflicto.
+  // Ahora la version y los datos viven en refs y los guardados van de a
+  // uno: si hay uno en curso, el siguiente espera y manda lo ultimo.
+  const dataRef = useRef(data);
+  dataRef.current = data;
+  const isSavingRef = useRef(false);
+  const hasPendingSaveRef = useRef(false);
+  const hasUnsavedChangesRef = useRef(false);
+
+  function flushSave() {
+    if (isSavingRef.current) {
+      hasPendingSaveRef.current = true;
+      return;
+    }
+    isSavingRef.current = true;
+    hasUnsavedChangesRef.current = false;
+    saveGymWorkspace(dataRef.current, rowVersionRef.current)
+      .then((snapshot) => {
+        rowVersionRef.current = snapshot.rowVersion;
+      })
+      .catch((error) => {
+        hasPendingSaveRef.current = false;
+        if (error instanceof GymUnauthorizedError) {
+          onSessionExpired();
+          return;
+        }
+        if (error instanceof GymConflictError) {
+          // Conflicto real (otro dispositivo/usuario guardo antes): se trae
+          // lo del servidor para no pisarle los cambios al otro.
+          toast.warn("Había cambios guardados desde otro dispositivo. Se actualizó la pantalla; repetí tu último cambio.");
+          void reloadFromServer();
+          return;
+        }
+        hasUnsavedChangesRef.current = true;
+        toast.error(error instanceof Error ? error.message : "No se pudo guardar.");
+      })
+      .finally(() => {
+        isSavingRef.current = false;
+        if (hasPendingSaveRef.current) {
+          hasPendingSaveRef.current = false;
+          flushSave();
+        }
+      });
+  }
+
+  async function reloadFromServer() {
+    try {
+      const snapshot = await fetchGymWorkspace();
+      rowVersionRef.current = snapshot.rowVersion;
+      skipNextSaveRef.current = true;
+      setData({ ...snapshot.data, students: snapshot.data.students ?? [], checkIns: snapshot.data.checkIns ?? [] });
+    } catch (error) {
+      if (error instanceof GymUnauthorizedError) onSessionExpired();
+    }
+  }
+
   // Autoguardado (1.2s de silencio, mismo criterio que agro) -- evita
   // guardar en cada tecla y evita el primer guardado espurio al cargar.
   useEffect(() => {
@@ -82,23 +141,23 @@ export function GymHomePage({ userName, onLogout, onSessionExpired }: GymHomePag
     }
     if (isLoading) return;
 
-    const timeoutId = window.setTimeout(() => {
-      saveGymWorkspace(data, rowVersion)
-        .then((snapshot) => {
-          setRowVersion(snapshot.rowVersion);
-        })
-        .catch((error) => {
-          if (error instanceof GymUnauthorizedError) {
-            onSessionExpired();
-            return;
-          }
-          toast.error(error instanceof Error ? error.message : "No se pudo guardar.");
-        });
-    }, 1200);
-
+    hasUnsavedChangesRef.current = true;
+    const timeoutId = window.setTimeout(flushSave, 1200);
     return () => window.clearTimeout(timeoutId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
+
+  // Si se recarga/cierra la pagina con un cambio todavia sin guardar
+  // (los 1.2s de espera o el guardado en curso), el navegador avisa.
+  useEffect(() => {
+    function handleBeforeUnload(event: BeforeUnloadEvent) {
+      if (!hasUnsavedChangesRef.current && !isSavingRef.current) return;
+      event.preventDefault();
+      event.returnValue = "";
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, []);
 
   function addAudit(action: GymAuditAction, details: string) {
     const entry: GymAuditEntry = {
