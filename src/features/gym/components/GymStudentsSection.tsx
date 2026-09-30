@@ -43,28 +43,6 @@ function describeDaysLeft(daysLeft: number): string {
   return `Venció hace ${-daysLeft} días`;
 }
 
-// Numeros de Uruguay: "099 123 456" -> "59899123456" para wa.me.
-function toWhatsAppNumber(phone: string): string | null {
-  let digits = phone.replace(/\D/g, "");
-  if (!digits) return null;
-  if (digits.startsWith("00")) digits = digits.slice(2);
-  if (digits.startsWith("0")) digits = `598${digits.slice(1)}`;
-  else if (digits.length === 8 && digits.startsWith("9")) digits = `598${digits}`;
-  return digits;
-}
-
-function buildWhatsAppUrl(student: GymStudent): string | null {
-  const number = toWhatsAppNumber(student.phone);
-  if (!number) return null;
-  const daysLeft = getDaysUntilDue(student.dueDate);
-  const firstName = student.name.split(" ")[0];
-  const message =
-    daysLeft < 0
-      ? `Hola ${firstName}! Te recordamos que tu cuota del gimnasio venció el ${formatShortDate(student.dueDate)}.`
-      : `Hola ${firstName}! Te recordamos que tu cuota del gimnasio vence el ${formatShortDate(student.dueDate)}.`;
-  return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
-}
-
 const STATUS_LABELS: Record<StudentStatus, string> = {
   green: "Al día",
   yellow: "Por vencer",
@@ -341,7 +319,6 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
           visible.map((student) => {
             const status = getStudentStatus(student.dueDate);
             const daysLeft = getDaysUntilDue(student.dueDate);
-            const whatsAppUrl = buildWhatsAppUrl(student);
             const isConfirmingRenew = confirming?.id === student.id && confirming.action === "renew";
             const isConfirmingDelete = confirming?.id === student.id && confirming.action === "delete";
 
@@ -410,11 +387,6 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
                       >
                         Renovar
                       </button>
-                      {whatsAppUrl ? (
-                        <a className="gym-ghost-button gym-ghost-button--whatsapp" href={whatsAppUrl} target="_blank" rel="noreferrer">
-                          WhatsApp
-                        </a>
-                      ) : null}
                       <button type="button" className="gym-ghost-button" onClick={() => openEdit(student)}>
                         Editar
                       </button>

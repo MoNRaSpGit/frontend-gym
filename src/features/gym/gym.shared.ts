@@ -85,3 +85,17 @@ export function getRenewedDueDate(student: GymStudent): string {
   const base = student.dueDate > today ? student.dueDate : today;
   return addMonths(base, GYM_STUDENT_PLAN_MONTHS[student.plan]);
 }
+
+// Se comparan los ultimos 8 digitos: asi "099 123 456", "99123456" y
+// "+598 99 123 456" son el mismo celular (Uruguay).
+export function normalizePhoneKey(phone: string): string {
+  return phone.replace(/\D/g, "").slice(-8);
+}
+
+// Fecha local (YYYY-MM-DD) de un timestamp ISO.
+export function toLocalDateFromIso(value: string): string {
+  const date = new Date(value);
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}

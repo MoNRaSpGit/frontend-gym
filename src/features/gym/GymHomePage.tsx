@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { fetchGymWorkspace, saveGymWorkspace } from "./gym.client";
-import { computeExpenseAfterPayment, generateId, getRenewedDueDate, getTodayDate } from "./gym.shared";
+import { computeExpenseAfterPayment, generateId, getRenewedDueDate, getStudentStatus, getTodayDate } from "./gym.shared";
 import type {
   GymAuditAction,
   GymAuditEntry,
+  GymCheckIn,
   GymExpense,
   GymMovement,
   GymMovementType,
@@ -17,17 +18,19 @@ import { GymExpensesSection } from "./components/GymExpensesSection";
 import { GymTasksSection } from "./components/GymTasksSection";
 import { GymSummarySection } from "./components/GymSummarySection";
 import { GymStudentsSection, type GymStudentInput } from "./components/GymStudentsSection";
+import { GymCheckInSection } from "./components/GymCheckInSection";
 
-type GymTab = "alumnos" | "gastos" | "tareas" | "resumen";
+type GymTab = "ingresar" | "alumnos" | "gastos" | "tareas" | "resumen";
 
 const TAB_LABELS: Record<GymTab, string> = {
+  ingresar: "Ingresar",
   alumnos: "Alumnos",
   gastos: "Gastos",
   tareas: "Tareas",
   resumen: "Resumen"
 };
 
-const EMPTY_DATA: GymWorkspaceData = { expenses: [], tasks: [], movements: [], students: [], auditLog: [] };
+const EMPTY_DATA: GymWorkspaceData = { expenses: [], tasks: [], movements: [], students: [], checkIns: [], auditLog: [] };
 
 export function GymHomePage() {
   const [tab, setTab] = useState<GymTab>("alumnos");
@@ -42,7 +45,7 @@ export function GymHomePage() {
     fetchGymWorkspace()
       .then((snapshot) => {
         if (cancelled) return;
-        setData({ ...snapshot.data, students: snapshot.data.students ?? [] });
+        setData({ ...snapshot.data, students: snapshot.data.students ?? [], checkIns: snapshot.data.checkIns ?? [] });
         setRowVersion(snapshot.rowVersion);
         setLoadError(null);
       })
@@ -305,6 +308,29 @@ export function GymHomePage() {
     });
   }
 
+  function handleCheckIn(studentId: string) {
+    setData((current) => {
+      const student = current.students.find((item) => item.id === studentId);
+      if (!student) return current;
+      const wasOverdue = getStudentStatus(student.dueDate) === "red";
+      const checkIn: GymCheckIn = {
+        id: generateId("in"),
+        studentId,
+        studentName: student.name,
+        timestamp: new Date().toISOString(),
+        wasOverdue
+      };
+      return {
+        ...current,
+        checkIns: [checkIn, ...current.checkIns],
+        auditLog: [
+          addAudit("student_checkin", `Ingreso: ${student.name}${wasOverdue ? " (cuota vencida)" : ""}`),
+          ...current.auditLog
+        ]
+      };
+    });
+  }
+
   if (isLoading) {
     return (
       <div className="gym-shell">
@@ -341,6 +367,9 @@ export function GymHomePage() {
       </nav>
 
       <main className="gym-main">
+        {tab === "ingresar" ? (
+          <GymCheckInSection students={data.students} checkIns={data.checkIns} onCheckIn={handleCheckIn} />
+        ) : null}
         {tab === "alumnos" ? (
           <GymStudentsSection
             students={data.students}

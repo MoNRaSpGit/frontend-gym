@@ -44,6 +44,15 @@ export type GymStudent = {
   createdAt: string;
 };
 
+export type GymCheckIn = {
+  id: string;
+  studentId: string;
+  studentName: string;
+  timestamp: string;
+  // Si entro con la cuota vencida (igual se lo deja pasar, es simulacion).
+  wasOverdue: boolean;
+};
+
 export type GymAuditAction =
   | "login"
   | "expense_created"
@@ -57,7 +66,8 @@ export type GymAuditAction =
   | "student_created"
   | "student_renewed"
   | "student_updated"
-  | "student_deleted";
+  | "student_deleted"
+  | "student_checkin";
 
 export type GymAuditEntry = {
   id: string;
@@ -71,6 +81,7 @@ export type GymWorkspaceData = {
   tasks: GymTask[];
   movements: GymMovement[];
   students: GymStudent[];
+  checkIns: GymCheckIn[];
   auditLog: GymAuditEntry[];
 };
 
