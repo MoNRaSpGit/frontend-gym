@@ -1,30 +1,58 @@
-const CACHE_NAME = "gym-pwa-v1";
-const APP_SHELL = ["/", "/index.html"];
+// Service worker a mano (mismo patron que frontend-joker/frontend-ejemplo)
+// en vez de uno generado por Workbox. Toma el control apenas se instala
+// (skipWaiting + clients.claim) y sirve las navegaciones network-first, asi
+// un reload siempre trae el shell mas nuevo si hay conexion.
+const SHELL_CACHE = "gym-shell-v1";
 
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)).then(() => self.skipWaiting())
-  );
+self.addEventListener("install", () => {
+  self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))
-    )
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(keys.filter((key) => key.startsWith("gym-") && key !== SHELL_CACHE).map((key) => caches.delete(key)));
+      await self.clients.claim();
+    })()
   );
-  self.clients.claim();
 });
 
 self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") {
+  const request = event.request;
+
+  // Solo cachear GET del mismo origen (el shell de la app). Los pedidos al
+  // backend (otro origen) siempre van directo a la red, nunca se cachean aca.
+  if (request.method !== "GET" || new URL(request.url).origin !== self.location.origin) {
+    return;
+  }
+
+  // app-build.json es lo que usa la app para detectar si hay version nueva:
+  // si se cachea, la comparacion siempre da "igual" contra su propia copia
+  // vieja y el cartel de actualizar nunca aparece. Siempre va a la red.
+  if (request.url.includes("app-build.json")) {
+    event.respondWith(fetch(request));
+    return;
+  }
+
+  if (request.mode === "navigate") {
+    event.respondWith(fetch(request).catch(() => caches.match(request)));
     return;
   }
 
   event.respondWith(
-    fetch(event.request).catch(async () => {
-      const cachedResponse = await caches.match(event.request);
-      return cachedResponse || caches.match("/index.html");
+    caches.match(request).then((cached) => {
+      const networkFetch = fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const responseClone = response.clone();
+            caches.open(SHELL_CACHE).then((cache) => cache.put(request, responseClone));
+          }
+          return response;
+        })
+        .catch(() => cached);
+
+      return cached || networkFetch;
     })
   );
 });
