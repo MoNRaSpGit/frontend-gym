@@ -8,17 +8,6 @@ export type GymExpense = {
   createdAt: string;
 };
 
-export type GymTaskColor = "green" | "yellow" | "red";
-export type GymTaskStatus = "todo" | "in_progress" | "done";
-
-export type GymTask = {
-  id: string;
-  title: string;
-  color: GymTaskColor;
-  status: GymTaskStatus;
-  createdAt: string;
-};
-
 export type GymMovementType = "cobro" | "gasto" | "cliente_nuevo" | "otro";
 
 export type GymMovement = {
@@ -32,12 +21,20 @@ export type GymMovement = {
 
 export type GymStudentPlan = "mensual" | "trimestral" | "semestral" | "anual";
 
+// Categoria/deporte del alumno (01/10/2026, pedido explicito: "me
+// preguntaron si podia ser por categoria tambien tipo voley, futbol...").
+// "gimnasio" es la generica de siempre (musculacion); el resto son
+// actividades con pelota -- se les pone el emoji de su pelota al lado
+// del nombre en la lista (ver GYM_STUDENT_CATEGORY_ICONS).
+export type GymStudentCategory = "gimnasio" | "futbol" | "voley" | "basquet" | "otro";
+
 export type GymStudent = {
   id: string;
   name: string;
   phone: string;
   fee: number | null;
   plan: GymStudentPlan;
+  category: GymStudentCategory;
   dueDate: string;
   note: string;
   lastPaidAt: string | null;
@@ -58,9 +55,6 @@ export type GymAuditAction =
   | "expense_created"
   | "expense_paid"
   | "expense_deleted"
-  | "task_created"
-  | "task_moved"
-  | "task_deleted"
   | "movement_created"
   | "movement_deleted"
   | "student_created"
@@ -78,7 +72,6 @@ export type GymAuditEntry = {
 
 export type GymWorkspaceData = {
   expenses: GymExpense[];
-  tasks: GymTask[];
   movements: GymMovement[];
   students: GymStudent[];
   checkIns: GymCheckIn[];
@@ -98,16 +91,22 @@ export const GYM_MOVEMENT_TYPE_LABELS: Record<GymMovementType, string> = {
   otro: "Otro"
 };
 
-export const GYM_TASK_COLOR_LABELS: Record<GymTaskColor, string> = {
-  green: "Básica",
-  yellow: "Media",
-  red: "Importante"
+export const GYM_STUDENT_CATEGORY_LABELS: Record<GymStudentCategory, string> = {
+  gimnasio: "Gimnasio",
+  futbol: "Fútbol",
+  voley: "Vóley",
+  basquet: "Básquet",
+  otro: "Otro"
 };
 
-export const GYM_TASK_STATUS_LABELS: Record<GymTaskStatus, string> = {
-  todo: "Tareas",
-  in_progress: "Realizando",
-  done: "Finalizada"
+// Pedido explicito: "de paso le pones una pelota referenciando, ejemplo
+// Juan Futbol (pelota), Pablo Voley (pelota de voley)".
+export const GYM_STUDENT_CATEGORY_ICONS: Record<GymStudentCategory, string> = {
+  gimnasio: "🏋️",
+  futbol: "⚽",
+  voley: "🏐",
+  basquet: "🏀",
+  otro: "🏷️"
 };
 
 export const GYM_STUDENT_PLAN_LABELS: Record<GymStudentPlan, string> = {

@@ -10,27 +10,23 @@ import type {
   GymMovement,
   GymMovementType,
   GymStudent,
-  GymTask,
-  GymTaskColor,
   GymWorkspaceData
 } from "./gym.types";
 import { GymExpensesSection } from "./components/GymExpensesSection";
-import { GymTasksSection } from "./components/GymTasksSection";
 import { GymSummarySection } from "./components/GymSummarySection";
 import { GymStudentsSection, type GymStudentInput } from "./components/GymStudentsSection";
 import { GymCheckInSection } from "./components/GymCheckInSection";
 
-type GymTab = "alumnos" | "gastos" | "tareas" | "resumen" | "ingresar";
+type GymTab = "alumnos" | "gastos" | "resumen" | "ingresar";
 
 const TAB_LABELS: Record<GymTab, string> = {
   alumnos: "Alumnos",
   gastos: "Gastos",
-  tareas: "Tareas",
   resumen: "Resumen",
   ingresar: "Ingresar"
 };
 
-const EMPTY_DATA: GymWorkspaceData = { expenses: [], tasks: [], movements: [], students: [], checkIns: [], auditLog: [] };
+const EMPTY_DATA: GymWorkspaceData = { expenses: [], movements: [], students: [], checkIns: [], auditLog: [] };
 
 type GymHomePageProps = {
   userName: string;
@@ -228,51 +224,6 @@ export function GymHomePage({ userName, onLogout, onSessionExpired }: GymHomePag
     });
   }
 
-  function handleCreateTask(input: { title: string; color: GymTaskColor }) {
-    const task: GymTask = {
-      id: generateId("task"),
-      title: input.title,
-      color: input.color,
-      status: "todo",
-      createdAt: new Date().toISOString()
-    };
-    setData((current) => ({
-      ...current,
-      tasks: [task, ...current.tasks],
-      auditLog: [addAudit("task_created", `Tarea creada: ${task.title}`), ...current.auditLog]
-    }));
-  }
-
-  function handleMoveTask(taskId: string, direction: "forward" | "backward") {
-    setData((current) => {
-      const order: GymTask["status"][] = ["todo", "in_progress", "done"];
-      const task = current.tasks.find((item) => item.id === taskId);
-      if (!task) return current;
-
-      const currentIndex = order.indexOf(task.status);
-      const nextIndex = direction === "forward" ? currentIndex + 1 : currentIndex - 1;
-      if (nextIndex < 0 || nextIndex >= order.length) return current;
-
-      const nextStatus = order[nextIndex];
-      return {
-        ...current,
-        tasks: current.tasks.map((item) => (item.id === taskId ? { ...item, status: nextStatus } : item)),
-        auditLog: [addAudit("task_moved", `Tarea "${task.title}" movida a ${nextStatus}`), ...current.auditLog]
-      };
-    });
-  }
-
-  function handleDeleteTask(taskId: string) {
-    setData((current) => {
-      const task = current.tasks.find((item) => item.id === taskId);
-      return {
-        ...current,
-        tasks: current.tasks.filter((item) => item.id !== taskId),
-        auditLog: task ? [addAudit("task_deleted", `Tarea borrada: ${task.title}`), ...current.auditLog] : current.auditLog
-      };
-    });
-  }
-
   function handleCreateMovement(input: { type: GymMovementType; amount: number | null; note: string }) {
     const movement: GymMovement = {
       id: generateId("mov"),
@@ -466,9 +417,6 @@ export function GymHomePage({ userName, onLogout, onSessionExpired }: GymHomePag
             onMarkPaid={handleMarkExpensePaid}
             onDelete={handleDeleteExpense}
           />
-        ) : null}
-        {tab === "tareas" ? (
-          <GymTasksSection tasks={data.tasks} onCreate={handleCreateTask} onMove={handleMoveTask} onDelete={handleDeleteTask} />
         ) : null}
         {tab === "resumen" ? (
           <GymSummarySection movements={data.movements} onCreate={handleCreateMovement} onDelete={handleDeleteMovement} />

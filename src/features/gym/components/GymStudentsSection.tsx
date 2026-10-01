@@ -10,9 +10,12 @@ import {
   type StudentStatus
 } from "../gym.shared";
 import {
+  GYM_STUDENT_CATEGORY_ICONS,
+  GYM_STUDENT_CATEGORY_LABELS,
   GYM_STUDENT_PLAN_LABELS,
   GYM_STUDENT_PLAN_MONTHS,
   type GymStudent,
+  type GymStudentCategory,
   type GymStudentPlan
 } from "../gym.types";
 
@@ -21,6 +24,7 @@ export type GymStudentInput = {
   phone: string;
   fee: number | null;
   plan: GymStudentPlan;
+  category: GymStudentCategory;
   dueDate: string;
   note: string;
 };
@@ -54,6 +58,7 @@ type FormState = {
   phone: string;
   fee: string;
   plan: GymStudentPlan;
+  category: GymStudentCategory;
   dueDate: string;
   note: string;
   paidNow: boolean;
@@ -65,6 +70,7 @@ function emptyForm(): FormState {
     phone: "",
     fee: "",
     plan: "mensual",
+    category: "gimnasio",
     dueDate: addMonths(getTodayDate(), 1),
     note: "",
     paidNow: true
@@ -121,6 +127,7 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
       phone: student.phone,
       fee: student.fee === null ? "" : String(student.fee),
       plan: student.plan,
+      category: student.category ?? "gimnasio",
       dueDate: student.dueDate,
       note: student.note,
       paidNow: false
@@ -161,6 +168,7 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
       phone: form.phone.trim(),
       fee,
       plan: form.plan,
+      category: form.category,
       dueDate: form.dueDate,
       note: form.note.trim()
     };
@@ -232,6 +240,19 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
                 {(Object.keys(GYM_STUDENT_PLAN_LABELS) as GymStudentPlan[]).map((plan) => (
                   <option key={plan} value={plan}>
                     {GYM_STUDENT_PLAN_LABELS[plan]}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="gym-field">
+              <span>Categoría</span>
+              <select
+                value={form.category}
+                onChange={(event) => updateForm("category", event.target.value as GymStudentCategory)}
+              >
+                {(Object.keys(GYM_STUDENT_CATEGORY_LABELS) as GymStudentCategory[]).map((category) => (
+                  <option key={category} value={category}>
+                    {GYM_STUDENT_CATEGORY_ICONS[category]} {GYM_STUDENT_CATEGORY_LABELS[category]}
                   </option>
                 ))}
               </select>
@@ -327,8 +348,11 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
                 <div className="gym-student-avatar">{student.name.charAt(0).toUpperCase()}</div>
 
                 <div className="gym-student-info">
-                  <strong className="gym-student-name">{student.name}</strong>
+                  <strong className="gym-student-name">
+                    {student.name} {GYM_STUDENT_CATEGORY_ICONS[student.category ?? "gimnasio"]}
+                  </strong>
                   <span className="gym-student-meta">
+                    {GYM_STUDENT_CATEGORY_LABELS[student.category ?? "gimnasio"]} ·{" "}
                     {GYM_STUDENT_PLAN_LABELS[student.plan]}
                     {student.fee !== null ? ` · ${formatMoney(student.fee)}` : ""}
                     {student.phone ? ` · ${student.phone}` : ""}
