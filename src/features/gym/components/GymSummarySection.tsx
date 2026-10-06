@@ -9,7 +9,7 @@ type GymSummarySectionProps = {
   onDelete: (movementId: string) => void;
 };
 
-const TYPES_WITH_AMOUNT: GymMovementType[] = ["cobro", "gasto"];
+const TYPES_WITH_AMOUNT: GymMovementType[] = ["cobro", "gasto", "producto"];
 
 export function GymSummarySection({ movements, onCreate, onDelete }: GymSummarySectionProps) {
   const [type, setType] = useState<GymMovementType>("cobro");
@@ -34,9 +34,15 @@ export function GymSummarySection({ movements, onCreate, onDelete }: GymSummaryS
     [movements, currentMonth]
   );
 
-  const ingresos = monthMovements
+  const ingresosCuotas = monthMovements
     .filter((movement) => movement.type === "cobro")
     .reduce((sum, movement) => sum + (movement.amount ?? 0), 0);
+  // "producto" (Tienda): ventas de suplementos, calzas, etc. -- suma igual
+  // al total de ingresos del mes, pero se muestra aparte de las cuotas.
+  const ingresosProductos = monthMovements
+    .filter((movement) => movement.type === "producto")
+    .reduce((sum, movement) => sum + (movement.amount ?? 0), 0);
+  const ingresos = ingresosCuotas + ingresosProductos;
   const egresos = monthMovements
     .filter((movement) => movement.type === "gasto")
     .reduce((sum, movement) => sum + (movement.amount ?? 0), 0);
@@ -44,9 +50,9 @@ export function GymSummarySection({ movements, onCreate, onDelete }: GymSummaryS
   const monthlyHistory = useMemo((): GymMonthHistoryItem[] => {
     const totalsByMonth = new Map<string, number>();
     for (const movement of movements) {
-      if (movement.type !== "cobro" && movement.type !== "gasto") continue;
+      if (movement.type !== "cobro" && movement.type !== "gasto" && movement.type !== "producto") continue;
       const key = getYearMonth(movement.date);
-      const signed = movement.type === "cobro" ? movement.amount ?? 0 : -(movement.amount ?? 0);
+      const signed = movement.type === "gasto" ? -(movement.amount ?? 0) : movement.amount ?? 0;
       totalsByMonth.set(key, (totalsByMonth.get(key) ?? 0) + signed);
     }
 
@@ -105,6 +111,14 @@ export function GymSummarySection({ movements, onCreate, onDelete }: GymSummaryS
         <div className="gym-summary-card">
           <span className="gym-hint">Ingresos del mes</span>
           <strong>{formatMoney(ingresos)}</strong>
+        </div>
+        <div className="gym-summary-card">
+          <span className="gym-hint">Cuotas del mes</span>
+          <strong>{formatMoney(ingresosCuotas)}</strong>
+        </div>
+        <div className="gym-summary-card">
+          <span className="gym-hint">Tienda del mes</span>
+          <strong>{formatMoney(ingresosProductos)}</strong>
         </div>
         <div className="gym-summary-card">
           <span className="gym-hint">Egresos del mes</span>

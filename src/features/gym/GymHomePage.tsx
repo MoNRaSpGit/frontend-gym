@@ -16,12 +16,14 @@ import { GymExpensesSection } from "./components/GymExpensesSection";
 import { GymSummarySection } from "./components/GymSummarySection";
 import { GymStudentsSection, type GymStudentInput } from "./components/GymStudentsSection";
 import { GymCheckInSection } from "./components/GymCheckInSection";
+import { GymShopSection } from "./components/GymShopSection";
 
-type GymTab = "alumnos" | "gastos" | "resumen" | "ingresar";
+type GymTab = "alumnos" | "gastos" | "tienda" | "resumen" | "ingresar";
 
 const TAB_LABELS: Record<GymTab, string> = {
   alumnos: "Alumnos",
   gastos: "Gastos",
+  tienda: "Tienda",
   resumen: "Resumen",
   ingresar: "Ingresar"
 };
@@ -417,6 +419,9 @@ export function GymHomePage({ userName, onLogout, onSessionExpired }: GymHomePag
             onMarkPaid={handleMarkExpensePaid}
             onDelete={handleDeleteExpense}
           />
+        ) : null}
+        {tab === "tienda" ? (
+          <GymShopSection movements={data.movements} onCreate={handleCreateMovement} onDelete={handleDeleteMovement} />
         ) : null}
         {tab === "resumen" ? (
           <GymSummarySection movements={data.movements} onCreate={handleCreateMovement} onDelete={handleDeleteMovement} />

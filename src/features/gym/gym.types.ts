@@ -8,7 +8,11 @@ export type GymExpense = {
   createdAt: string;
 };
 
-export type GymMovementType = "cobro" | "gasto" | "cliente_nuevo" | "otro";
+// "producto" (06/10/2026, pedido explicito: "el cliente vende otras cosas,
+// no solo la mensualidad -- suplementos, calzas, etc.") es income igual
+// que "cobro", pero se carga desde la pestana Tienda y se reporta
+// separado en el resumen para no mezclarlo con las cuotas.
+export type GymMovementType = "cobro" | "gasto" | "cliente_nuevo" | "producto" | "otro";
 
 export type GymMovement = {
   id: string;
@@ -88,6 +92,7 @@ export const GYM_MOVEMENT_TYPE_LABELS: Record<GymMovementType, string> = {
   cobro: "Cobro",
   gasto: "Gasto",
   cliente_nuevo: "Cliente nuevo",
+  producto: "Venta de producto",
   otro: "Otro"
 };
 
