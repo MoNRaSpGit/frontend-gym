@@ -59,7 +59,19 @@ export function GymSummarySection({ movements, onCreate, onDelete }: GymSummaryS
       });
   }, [movements]);
 
-  const recentMovements = [...movements].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 30);
+  const sortedMovements = useMemo(
+    () => [...movements].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    [movements]
+  );
+
+  // Paginado simple (06/10/2026, pedido explicito): arranca mostrando 5,
+  // "Ver mas" suma de 5 en 5, y cuando el proximo salto ya cubriria todo
+  // lo que queda el boton pasa a decir "Ver todos" (mismo boton, un solo
+  // click salta al final en vez de seguir de a 5).
+  const PAGE_SIZE = 5;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const visibleMovements = sortedMovements.slice(0, visibleCount);
+  const remaining = sortedMovements.length - visibleCount;
 
   return (
     <div className="gym-tab-content">
@@ -107,10 +119,10 @@ export function GymSummarySection({ movements, onCreate, onDelete }: GymSummaryS
       <GraficoResumenMensual meses={monthlyHistory} />
 
       <div className="gym-movement-list">
-        {recentMovements.length === 0 ? (
+        {visibleMovements.length === 0 ? (
           <p className="gym-hint">Todavía no cargaste ningún movimiento.</p>
         ) : (
-          recentMovements.map((movement) => (
+          visibleMovements.map((movement) => (
             <div key={movement.id} className="gym-movement-row">
               <span className="gym-badge">{GYM_MOVEMENT_TYPE_LABELS[movement.type]}</span>
               <span>{movement.amount !== null ? formatMoney(movement.amount) : "-"}</span>
@@ -123,6 +135,17 @@ export function GymSummarySection({ movements, onCreate, onDelete }: GymSummaryS
           ))
         )}
       </div>
+
+      {remaining > 0 ? (
+        <button
+          type="button"
+          className="gym-ghost-button"
+          style={{ marginTop: 10 }}
+          onClick={() => setVisibleCount((count) => (remaining <= PAGE_SIZE ? sortedMovements.length : count + PAGE_SIZE))}
+        >
+          {remaining <= PAGE_SIZE ? "Ver todos" : "Ver más"}
+        </button>
+      ) : null}
     </div>
   );
 }

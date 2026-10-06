@@ -38,6 +38,7 @@ type GymStudentsSectionProps = {
 };
 
 type StatusFilter = "all" | StudentStatus;
+type CategoryFilter = "all" | GymStudentCategory;
 
 function describeDaysLeft(daysLeft: number): string {
   if (daysLeft === 0) return "Vence hoy";
@@ -85,6 +86,7 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
   const [formError, setFormError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<StatusFilter>("all");
+  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
   const [confirming, setConfirming] = useState<{ id: string; action: "renew" | "delete" } | null>(null);
 
   const counts = useMemo(() => {
@@ -93,13 +95,20 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
     return result;
   }, [students]);
 
+  const categoryCounts = useMemo(() => {
+    const result: Record<GymStudentCategory, number> = { gimnasio: 0, futbol: 0, voley: 0, basquet: 0, otro: 0 };
+    for (const student of students) result[student.category ?? "gimnasio"] += 1;
+    return result;
+  }, [students]);
+
   const visible = useMemo(() => {
     const term = search.trim().toLowerCase();
     return students
       .filter((student) => (filter === "all" ? true : getStudentStatus(student.dueDate) === filter))
+      .filter((student) => (categoryFilter === "all" ? true : (student.category ?? "gimnasio") === categoryFilter))
       .filter((student) => (term ? student.name.toLowerCase().includes(term) || student.phone.includes(term) : true))
       .sort((a, b) => a.dueDate.localeCompare(b.dueDate) || a.name.localeCompare(b.name));
-  }, [students, search, filter]);
+  }, [students, search, filter, categoryFilter]);
 
   function updateForm<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => {
@@ -324,6 +333,27 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
           >
             <span className="gym-status-dot" />
             {STATUS_LABELS[status]} <strong>{counts[status]}</strong>
+          </button>
+        ))}
+      </div>
+
+      <div className="gym-status-filters">
+        <button
+          type="button"
+          className={categoryFilter === "all" ? "gym-status-chip gym-status-chip--active" : "gym-status-chip"}
+          onClick={() => setCategoryFilter("all")}
+        >
+          Todas las categorías <strong>{students.length}</strong>
+        </button>
+        {(Object.keys(GYM_STUDENT_CATEGORY_LABELS) as GymStudentCategory[]).map((category) => (
+          <button
+            key={category}
+            type="button"
+            className={categoryFilter === category ? "gym-status-chip gym-status-chip--active" : "gym-status-chip"}
+            onClick={() => setCategoryFilter(categoryFilter === category ? "all" : category)}
+          >
+            {GYM_STUDENT_CATEGORY_ICONS[category]} {GYM_STUDENT_CATEGORY_LABELS[category]}{" "}
+            <strong>{categoryCounts[category]}</strong>
           </button>
         ))}
       </div>
