@@ -89,9 +89,12 @@ export function GymSummarySection({ movements, onCreate, onDelete }: GymSummaryS
       });
   }, [movements]);
 
+  // Lista de abajo filtrada por el mismo mes elegido arriba (09/10/2026,
+  // pedido explicito: "si pongo agosto, me muestra eso" -- antes
+  // mostraba siempre todos los movimientos, sin importar el mes activo).
   const sortedMovements = useMemo(
-    () => [...movements].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
-    [movements]
+    () => [...monthMovements].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    [monthMovements]
   );
 
   // Paginado simple (06/10/2026, pedido explicito): arranca mostrando 5,
@@ -100,6 +103,12 @@ export function GymSummarySection({ movements, onCreate, onDelete }: GymSummaryS
   // click salta al final en vez de seguir de a 5).
   const PAGE_SIZE = 5;
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  // Si se cambia de mes, se vuelve a arrancar mostrando solo 5 (sino
+  // quedaba "Ver todos" ya apretado de un mes anterior con mas datos).
+  const handleSelectMonth = (key: string) => {
+    setSelectedMonth(key);
+    setVisibleCount(PAGE_SIZE);
+  };
   const visibleMovements = sortedMovements.slice(0, visibleCount);
   const remaining = sortedMovements.length - visibleCount;
 
@@ -147,7 +156,7 @@ export function GymSummarySection({ movements, onCreate, onDelete }: GymSummaryS
           <strong>{formatMoney(ingresosProductos)}</strong>
         </div>
         <div className="gym-summary-card gym-summary-card--egresos">
-          <span className="gym-hint">Egresos del mes</span>
+          <span className="gym-hint">Gastos diarios del mes</span>
           <strong>{formatMoney(egresos)}</strong>
         </div>
         <div className="gym-summary-card gym-summary-card--neto">
@@ -156,11 +165,11 @@ export function GymSummarySection({ movements, onCreate, onDelete }: GymSummaryS
         </div>
       </div>
 
-      <GraficoResumenMensual meses={monthlyHistory} selectedMonth={selectedMonth} onSelectMonth={setSelectedMonth} />
+      <GraficoResumenMensual meses={monthlyHistory} selectedMonth={selectedMonth} onSelectMonth={handleSelectMonth} />
 
       <div className="gym-movement-list">
         {visibleMovements.length === 0 ? (
-          <p className="gym-hint">Todavía no cargaste ningún movimiento.</p>
+          <p className="gym-hint">No hay movimientos en {formatMonthLabel(selectedMonth).toLowerCase()}.</p>
         ) : (
           visibleMovements.map((movement) => (
             <div key={movement.id} className="gym-movement-row">

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { addExpenseInterval, formatDateTime, formatMoney, formatShortDate, getDaysUntilDue, getTodayDate, getYearMonth } from "../gym.shared";
+import { addExpenseInterval, formatDateTime, formatMoney, formatShortDate, getDaysUntilDue, getTodayDate } from "../gym.shared";
 import type { GymExpense, GymMovement, GymMovementType } from "../gym.types";
 
 type GymExpensesSectionProps = {
@@ -32,6 +32,12 @@ export function GymExpensesSection({
 
   const [dailyNote, setDailyNote] = useState("");
   const [dailyAmount, setDailyAmount] = useState("");
+  // Que dia se esta mirando (09/10/2026, pedido explicito): "si no es muy
+  // dificil, a que dia... vamos a poner que el gasto diario tenga abajo
+  // la fecha que esta mostrando, y si le hago clic me permite cambiarla".
+  // Un selector de fecha nativo en vez de texto libre, para no depender
+  // de que se escriba bien el formato -- arranca en el dia de hoy.
+  const [selectedDailyDate, setSelectedDailyDate] = useState(getTodayDate());
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -61,9 +67,9 @@ export function GymExpensesSection({
   const dailyExpenses = useMemo(
     () =>
       movements
-        .filter((movement) => movement.type === "gasto" && getYearMonth(movement.date) === getYearMonth(getTodayDate()))
+        .filter((movement) => movement.type === "gasto" && movement.date === selectedDailyDate)
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
-    [movements]
+    [movements, selectedDailyDate]
   );
 
   const sorted = [...expenses].sort((a, b) => getDaysUntilDue(a.dueDate) - getDaysUntilDue(b.dueDate));
@@ -96,9 +102,14 @@ export function GymExpensesSection({
         </button>
       </form>
 
+      <label className="gym-daily-date-picker">
+        <span>Gasto diario del</span>
+        <input type="date" value={selectedDailyDate} onChange={(event) => setSelectedDailyDate(event.target.value)} />
+      </label>
+
       <div className="gym-movement-list">
         {dailyExpenses.length === 0 ? (
-          <p className="gym-hint">Todavía no cargaste gastos diarios este mes.</p>
+          <p className="gym-hint">No hay gastos diarios cargados ese día.</p>
         ) : (
           dailyExpenses.map((movement) => (
             <div key={movement.id} className="gym-movement-row">
