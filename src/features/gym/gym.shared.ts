@@ -33,8 +33,11 @@ export function buildWhatsAppLink(phone: string, message: string): string {
   return `https://wa.me/${withCountryCode}?text=${encodeURIComponent(message)}`;
 }
 
+// Formato "carta" (09/10/2026, pedido explicito): encabezado con el
+// nombre en su propia linea, aparte del cuerpo -- no todo en una frase
+// corrida. "%0A" (salto de linea) lo respeta WhatsApp al abrir el chat.
 export function buildOverdueFeeMessage(studentName: string, dueDate: string): string {
-  return `Hola ${studentName}! Te escribimos del gimnasio para recordarte que tu cuota venció el ${formatShortDate(dueDate)}. ¿Podrías coordinar el pago cuando puedas? Muchas gracias.`;
+  return `Estimado cliente ${studentName}:\n\nLe escribimos del gimnasio Equilibrio para recordarle que su cuota venció el ${formatShortDate(dueDate)}. Por favor, pasar por recepción. ¡Gracias! 😊`;
 }
 
 export function formatDateTime(value: string): string {
