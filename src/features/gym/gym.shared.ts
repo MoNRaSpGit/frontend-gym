@@ -39,7 +39,7 @@ export function buildWhatsAppLink(phone: string, message: string): string {
 export function buildOverdueFeeMessage(studentName: string, dueDate: string): string {
   // Sin emoji (09/10/2026, confirmado con el usuario): tanto 😊 como 🙂
   // le salian como "?" en su app -- se descarta el emoji definitivamente.
-  return `Estimado cliente ${studentName}:\n\nLe escribimos del gimnasio Equilibrio para recordarle que su cuota venció el ${formatShortDate(dueDate)}.\n\nPor favor, pasar por recepción. ¡Gracias!`;
+  return `Estimado cliente ${studentName}:\n\nSegún nuestros registros, su cuota venció el ${formatShortDate(dueDate)}.\n\nPor favor, pasar por recepción. ¡Gracias!`;
 }
 
 export function formatDateTime(value: string): string {
