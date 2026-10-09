@@ -73,7 +73,7 @@ function emptyForm(): FormState {
     phone: "",
     fee: "",
     plan: "mensual",
-    category: "gimnasio",
+    category: "musculacion",
     dueDate: addMonths(getTodayDate(), 1),
     note: "",
     paidNow: true
@@ -99,17 +99,13 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
 
   const categoryCounts = useMemo(() => {
     const result: Record<GymStudentCategory, number> = {
-      gimnasio: 0,
-      futbol: 0,
-      voley: 0,
-      basquet: 0,
       preparacion_deportiva: 0,
       funcional: 0,
       musculacion: 0,
       zumba: 0,
       otro: 0
     };
-    for (const student of students) result[student.category ?? "gimnasio"] += 1;
+    for (const student of students) result[student.category ?? "otro"] += 1;
     return result;
   }, [students]);
 
@@ -117,7 +113,7 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
     const term = search.trim().toLowerCase();
     return students
       .filter((student) => (filter === "all" ? true : getStudentStatus(student.dueDate) === filter))
-      .filter((student) => (categoryFilter === "all" ? true : (student.category ?? "gimnasio") === categoryFilter))
+      .filter((student) => (categoryFilter === "all" ? true : (student.category ?? "otro") === categoryFilter))
       .filter((student) => (term ? student.name.toLowerCase().includes(term) || student.phone.includes(term) : true))
       // Orden alfabetico (09/10/2026, pedido explicito) -- antes se
       // ordenaba primero por vencimiento.
@@ -150,7 +146,7 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
       phone: student.phone,
       fee: student.fee === null ? "" : String(student.fee),
       plan: student.plan,
-      category: student.category ?? "gimnasio",
+      category: student.category ?? "otro",
       dueDate: student.dueDate,
       note: student.note,
       paidNow: false
@@ -393,10 +389,10 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
 
                 <div className="gym-student-info">
                   <strong className="gym-student-name">
-                    {student.name} {GYM_STUDENT_CATEGORY_ICONS[student.category ?? "gimnasio"]}
+                    {student.name} {GYM_STUDENT_CATEGORY_ICONS[student.category ?? "otro"]}
                   </strong>
                   <span className="gym-student-meta">
-                    {GYM_STUDENT_CATEGORY_LABELS[student.category ?? "gimnasio"]} ·{" "}
+                    {GYM_STUDENT_CATEGORY_LABELS[student.category ?? "otro"]} ·{" "}
                     {GYM_STUDENT_PLAN_LABELS[student.plan]}
                     {student.fee !== null ? ` · ${formatMoney(student.fee)}` : ""}
                     {student.phone ? ` · ${student.phone}` : ""}

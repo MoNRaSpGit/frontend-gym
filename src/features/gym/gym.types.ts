@@ -25,25 +25,11 @@ export type GymMovement = {
 
 export type GymStudentPlan = "mensual" | "trimestral" | "semestral" | "anual";
 
-// Categoria/deporte del alumno (01/10/2026, pedido explicito: "me
-// preguntaron si podia ser por categoria tambien tipo voley, futbol...").
-// "gimnasio" es la generica de siempre (musculacion); el resto son
-// actividades con pelota -- se les pone el emoji de su pelota al lado
-// del nombre en la lista (ver GYM_STUDENT_CATEGORY_ICONS).
-// Pedido explicito (09/10/2026): se suman categorias de gimnasio puro
-// para la cuenta nueva "alegym" (Preparacion deportiva, Funcional,
-// Musculacion, Zumba) -- se agregan a la lista en vez de reemplazarla,
-// asi el cliente real de "ale" (futbol/voley/basquet) sigue igual.
-export type GymStudentCategory =
-  | "gimnasio"
-  | "futbol"
-  | "voley"
-  | "basquet"
-  | "preparacion_deportiva"
-  | "funcional"
-  | "musculacion"
-  | "zumba"
-  | "otro";
+// Categoria del alumno (09/10/2026, pedido explicito: "saca las
+// categorias gimnasio, futbol, voley y basquet" -- el unico cliente real
+// de Gym a partir de ahora es "alegym", asi que quedan solo estas 4 mas
+// "otro").
+export type GymStudentCategory = "preparacion_deportiva" | "funcional" | "musculacion" | "zumba" | "otro";
 
 export type GymStudent = {
   id: string;
@@ -110,10 +96,6 @@ export const GYM_MOVEMENT_TYPE_LABELS: Record<GymMovementType, string> = {
 };
 
 export const GYM_STUDENT_CATEGORY_LABELS: Record<GymStudentCategory, string> = {
-  gimnasio: "Gimnasio",
-  futbol: "Fútbol",
-  voley: "Vóley",
-  basquet: "Básquet",
   preparacion_deportiva: "Preparación deportiva",
   funcional: "Funcional",
   musculacion: "Musculación",
@@ -121,13 +103,7 @@ export const GYM_STUDENT_CATEGORY_LABELS: Record<GymStudentCategory, string> = {
   otro: "Otro"
 };
 
-// Pedido explicito: "de paso le pones una pelota referenciando, ejemplo
-// Juan Futbol (pelota), Pablo Voley (pelota de voley)".
 export const GYM_STUDENT_CATEGORY_ICONS: Record<GymStudentCategory, string> = {
-  gimnasio: "🏋️",
-  futbol: "⚽",
-  voley: "🏐",
-  basquet: "🏀",
   preparacion_deportiva: "🏃",
   funcional: "🤸",
   musculacion: "💪",
