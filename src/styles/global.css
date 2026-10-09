@@ -707,6 +707,23 @@ button {
   background: color-mix(in srgb, var(--color-warning) 18%, transparent);
 }
 
+.gym-whatsapp-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  background: #25d366;
+  text-decoration: none;
+}
+
+.gym-whatsapp-button:hover {
+  background: #1ebe59;
+}
+
 .gym-due-pill--red {
   color: var(--color-danger);
   background: color-mix(in srgb, var(--color-danger) 18%, transparent);

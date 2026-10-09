@@ -21,6 +21,22 @@ export function formatShortDate(value: string): string {
   return `${day}/${month}/${year.slice(2)}`;
 }
 
+// Link de WhatsApp (09/10/2026, pedido explicito): "que abra la
+// conversacion... que el mensaje lo termine de enviar yo, el humano" --
+// es un simple wa.me con texto precargado, no manda nada solo. Numeros
+// uruguayos se escriben con el 0 inicial (ej: "092 945 696"); wa.me
+// necesita el numero completo con codigo de pais (598) y sin ese 0.
+export function buildWhatsAppLink(phone: string, message: string): string {
+  const digits = phone.replace(/\D/g, "");
+  const withoutLeadingZero = digits.startsWith("0") ? digits.slice(1) : digits;
+  const withCountryCode = withoutLeadingZero.startsWith("598") ? withoutLeadingZero : `598${withoutLeadingZero}`;
+  return `https://wa.me/${withCountryCode}?text=${encodeURIComponent(message)}`;
+}
+
+export function buildOverdueFeeMessage(studentName: string, dueDate: string): string {
+  return `Hola ${studentName}! Te escribimos del gimnasio para recordarte que tu cuota venció el ${formatShortDate(dueDate)}. ¿Podrías coordinar el pago cuando puedas? Muchas gracias.`;
+}
+
 export function formatDateTime(value: string): string {
   return new Date(value).toLocaleString("es-UY", { dateStyle: "short", timeStyle: "short" });
 }
