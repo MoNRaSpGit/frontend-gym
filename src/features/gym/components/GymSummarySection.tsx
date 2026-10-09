@@ -109,18 +109,34 @@ export function GymSummarySection({ movements, onDelete, selectedMonth, onSelect
   // abre un selector de dia (dentro del mes ya elegido arriba) y muestra
   // los gastos diarios de ese dia puntual. En Gastos solo se cargan (ver
   // GymExpensesSection) -- este es el unico lugar donde se navegan/borran.
+  //
+  // "appliedDay" es el dia que realmente filtra (arranca en hoy).
+  // "dayDraft" es el texto del input, SIEMPRE arranca vacio -- con
+  // type="number" y value controlado en 1, al borrar quedaba atascado en
+  // "1" y escribir "6" daba "16" (pedido explicito: "dejá el input vacío,
+  // que solo va a mostrar luego de apretar en Ver"). Sin flechitas de
+  // subir/bajar tampoco.
   const [isDailyPanelOpen, setIsDailyPanelOpen] = useState(false);
-  const [selectedDay, setSelectedDay] = useState(() => {
+  const [appliedDay, setAppliedDay] = useState(() => {
     const today = getTodayDate();
     return getYearMonth(today) === selectedMonth ? Number(today.split("-")[2]) : 1;
   });
+  const [dayDraft, setDayDraft] = useState("");
 
   useEffect(() => {
     const today = getTodayDate();
-    setSelectedDay(getYearMonth(today) === selectedMonth ? Number(today.split("-")[2]) : 1);
+    setAppliedDay(getYearMonth(today) === selectedMonth ? Number(today.split("-")[2]) : 1);
+    setDayDraft("");
   }, [selectedMonth]);
 
-  const selectedDailyDate = `${selectedMonth}-${String(selectedDay).padStart(2, "0")}`;
+  function handleApplyDay(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const parsed = Number(dayDraft);
+    if (!Number.isFinite(parsed) || parsed < 1) return;
+    setAppliedDay(Math.min(Math.max(1, Math.trunc(parsed)), daysInMonth(selectedMonth)));
+  }
+
+  const selectedDailyDate = `${selectedMonth}-${String(appliedDay).padStart(2, "0")}`;
   const dailyExpenses = useMemo(
     () =>
       monthMovements
@@ -162,22 +178,20 @@ export function GymSummarySection({ movements, onDelete, selectedMonth, onSelect
 
       {isDailyPanelOpen ? (
         <div className="gym-daily-panel">
-          <label className="gym-daily-date-picker">
-            <span>Gastos diarios del día</span>
+          <form className="gym-daily-date-picker" onSubmit={handleApplyDay}>
+            <span>Gastos diarios del día {appliedDay} de {formatMonthLabel(selectedMonth)}</span>
             <input
-              type="number"
-              min="1"
-              max={daysInMonth(selectedMonth)}
-              value={selectedDay}
-              onChange={(event) => {
-                const parsed = Number(event.target.value);
-                if (Number.isFinite(parsed)) {
-                  setSelectedDay(Math.min(Math.max(1, parsed), daysInMonth(selectedMonth)));
-                }
-              }}
+              type="text"
+              inputMode="numeric"
+              placeholder={String(appliedDay)}
+              value={dayDraft}
+              onChange={(event) => setDayDraft(event.target.value.replace(/\D/g, ""))}
             />
+            <button type="submit" className="gym-ghost-button">
+              Ver
+            </button>
             <span className="gym-hint">{formatMoney(dailyExpenses.reduce((sum, m) => sum + (m.amount ?? 0), 0))}</span>
-          </label>
+          </form>
 
           <div className="gym-movement-list">
             {dailyExpenses.length === 0 ? (

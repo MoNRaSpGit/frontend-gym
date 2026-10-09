@@ -53,7 +53,6 @@ export function GymExpensesSection({ expenses, onCreate, onMarkPaid, onDelete, o
   return (
     <div className="gym-tab-content">
       <h2 className="gym-section-title">Gastos diarios</h2>
-      <p className="gym-hint">Se carga con la fecha de hoy. Para ver los gastos diarios de otro día, mirá el Resumen.</p>
       <form className="gym-form" onSubmit={handleSubmitDaily}>
         <label className="gym-form-note">
           <span>Concepto</span>
