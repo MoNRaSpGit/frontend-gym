@@ -29,7 +29,10 @@ export type GymStudentPlan = "mensual" | "trimestral" | "semestral" | "anual";
 // categorias gimnasio, futbol, voley y basquet" -- el unico cliente real
 // de Gym a partir de ahora es "alegym", asi que quedan solo estas 4 mas
 // "otro").
-export type GymStudentCategory = "preparacion_deportiva" | "funcional" | "musculacion" | "zumba" | "otro";
+// "musculacion_funcional" (10/10/2026, pedido explicito): categoria
+// combinada aparte, no reemplaza a "musculacion" ni a "funcional" por
+// separado -- quedan las tres como opciones distintas.
+export type GymStudentCategory = "preparacion_deportiva" | "funcional" | "musculacion" | "musculacion_funcional" | "zumba" | "otro";
 
 export type GymStudent = {
   id: string;
@@ -99,6 +102,7 @@ export const GYM_STUDENT_CATEGORY_LABELS: Record<GymStudentCategory, string> = {
   preparacion_deportiva: "Preparación deportiva",
   funcional: "Funcional",
   musculacion: "Musculación",
+  musculacion_funcional: "Musculación y Funcional",
   zumba: "Zumba",
   otro: "Otro"
 };
@@ -107,6 +111,7 @@ export const GYM_STUDENT_CATEGORY_ICONS: Record<GymStudentCategory, string> = {
   preparacion_deportiva: "🏃",
   funcional: "🤸",
   musculacion: "💪",
+  musculacion_funcional: "🏋️",
   zumba: "💃",
   otro: "🏷️"
 };

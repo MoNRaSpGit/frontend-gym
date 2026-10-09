@@ -102,6 +102,7 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
       preparacion_deportiva: 0,
       funcional: 0,
       musculacion: 0,
+      musculacion_funcional: 0,
       zumba: 0,
       otro: 0
     };
