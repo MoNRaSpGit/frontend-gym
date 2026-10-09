@@ -37,11 +37,12 @@ export function buildWhatsAppLink(phone: string, message: string): string {
 // nombre en su propia linea, aparte del cuerpo -- no todo en una frase
 // corrida. "%0A" (salto de linea) lo respeta WhatsApp al abrir el chat.
 export function buildOverdueFeeMessage(studentName: string, dueDate: string): string {
-  // Sin emoji (09/10/2026, pedido explicito): en WhatsApp Business de
-  // algunos clientes aparecia como un "?" -- no vale el riesgo de
-  // compatibilidad por un emoji. "Por favor pasar por recepcion" en su
-  // propio renglon, aparte del resto.
-  return `Estimado cliente ${studentName}:\n\nLe escribimos del gimnasio Equilibrio para recordarle que su cuota venció el ${formatShortDate(dueDate)}.\n\nPor favor, pasar por recepción. ¡Gracias!`;
+  // Emoji (09/10/2026): el de la carita con ojitos (😊) le salia como "?"
+  // en WhatsApp Business de un cliente -- el texto que mandamos esta bien
+  // (son los bytes UTF-8 correctos), el problema es que esa fuente/app no
+  // tiene ESE emoji en particular. Se prueba con 🙂, uno mas viejo/clasico
+  // con mejor soporte en apps y Android viejos.
+  return `Estimado cliente ${studentName}:\n\nLe escribimos del gimnasio Equilibrio para recordarle que su cuota venció el ${formatShortDate(dueDate)}.\n\nPor favor, pasar por recepción. ¡Gracias! 🙂`;
 }
 
 export function formatDateTime(value: string): string {
