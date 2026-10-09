@@ -5,12 +5,18 @@ import { isAppIdle } from "../state/appActivity";
 const UPDATE_CHECK_INTERVAL_MS = 2 * 60 * 1000;
 const IDLE_RETRY_INTERVAL_MS = 15 * 1000;
 const APP_CACHE_PREFIX = "gym-";
+// Cuanto tarda la barra en llenarse cuando el usuario toca "Actualizar"
+// (10/10/2026, pedido explicito: imitar la pantalla de progreso de
+// frontend-distribuidora). La limpieza real es mas rapida; la barra
+// existe para que se VEA que esta actualizando.
+const PROGRESS_DURATION_MS = 2200;
+const PROGRESS_TICK_MS = 40;
 
 // Misma logica que frontend-joker/frontend-ejemplo: en vez de coordinar con
 // el service worker "nuevo", directo lo desregistra, borra el cache de la
 // app y recarga -- como sw.js ya hace skipWaiting + clients.claim solo, el
 // proximo load arranca limpio.
-async function applyUpdate() {
+async function clearAppCache() {
   try {
     if ("serviceWorker" in navigator) {
       const registrations = await navigator.serviceWorker.getRegistrations();
@@ -27,14 +33,13 @@ async function applyUpdate() {
       await Promise.all(keys.filter((key) => key.startsWith(APP_CACHE_PREFIX)).map((key) => window.caches.delete(key)));
     }
   } catch {
-    // Si la limpieza falla, igual conviene forzar el reload para reintentar.
-  } finally {
-    window.location.reload();
+    // Si la limpieza falla, igual se recarga: es lo que trae la version nueva.
   }
 }
 
 export function AppUpdateNotice() {
   const [show, setShow] = useState(false);
+  const [progress, setProgress] = useState<number | null>(null);
   const appliedRef = useRef(false);
 
   useEffect(() => {
@@ -54,9 +59,13 @@ export function AppUpdateNotice() {
           return;
         }
 
+        // Si nadie esta usando la app, se actualiza sola y sin pantalla de
+        // progreso (no hay nadie mirando). Si hay alguien, se le muestra
+        // el cartel y decide el cuando con el boton "Actualizar".
         if (isAppIdle()) {
           appliedRef.current = true;
-          await applyUpdate();
+          await clearAppCache();
+          window.location.reload();
           return;
         }
 
@@ -74,7 +83,7 @@ export function AppUpdateNotice() {
     const idleRetryId = window.setInterval(() => {
       if (show && !appliedRef.current && isAppIdle()) {
         appliedRef.current = true;
-        void applyUpdate();
+        void clearAppCache().then(() => window.location.reload());
       }
     }, IDLE_RETRY_INTERVAL_MS);
 
@@ -96,40 +105,53 @@ export function AppUpdateNotice() {
     };
   }, [show]);
 
+  // Boton "Actualizar" tocado a mano: pantalla de progreso que toma toda
+  // la pantalla, igual que frontend-distribuidora, y recien al llegar a
+  // 100% (y con la limpieza real ya terminada) recarga.
+  function handleUpdate() {
+    if (progress !== null) return;
+    appliedRef.current = true;
+    setProgress(0);
+
+    const cleanup = clearAppCache();
+    const startedAt = Date.now();
+
+    const intervalId = window.setInterval(() => {
+      const next = Math.min(100, Math.round(((Date.now() - startedAt) / PROGRESS_DURATION_MS) * 100));
+      setProgress(next);
+
+      if (next >= 100) {
+        window.clearInterval(intervalId);
+        void cleanup.then(() => window.location.reload());
+      }
+    }, PROGRESS_TICK_MS);
+  }
+
+  if (progress !== null) {
+    return (
+      <div className="update-overlay" role="status" aria-live="polite">
+        <div className="update-overlay-card">
+          <img src={`${import.meta.env.BASE_URL}icon-192.png`} alt="" />
+          <strong>{progress < 100 ? "Actualizando la aplicación…" : "¡Listo!"}</strong>
+          <div className="update-progress" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}>
+            <div className="update-progress-fill" style={{ width: `${progress}%` }} />
+          </div>
+          <span>{progress}%</span>
+        </div>
+      </div>
+    );
+  }
+
   if (!show) {
     return null;
   }
 
   return (
-    <aside style={noticeStyle}>
-      <strong>Hay una version nueva disponible.</strong>
-      <button type="button" onClick={() => void applyUpdate()} style={buttonStyle}>
+    <aside className="update-banner" role="status" aria-live="polite">
+      <strong>Hay una nueva actualización</strong>
+      <button type="button" className="gym-primary-button" onClick={handleUpdate}>
         Actualizar
       </button>
     </aside>
   );
 }
-
-const noticeStyle: React.CSSProperties = {
-  position: "fixed",
-  left: 16,
-  bottom: 16,
-  zIndex: 30,
-  padding: "12px 14px",
-  borderRadius: 18,
-  background: "#151a23",
-  color: "#fff",
-  display: "flex",
-  gap: 12,
-  alignItems: "center",
-  boxShadow: "0 16px 30px rgba(0,0,0,0.16)"
-};
-
-const buttonStyle: React.CSSProperties = {
-  minHeight: 36,
-  padding: "0 12px",
-  borderRadius: 999,
-  border: "none",
-  fontWeight: 800,
-  cursor: "pointer"
-};
