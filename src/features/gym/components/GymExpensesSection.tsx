@@ -1,42 +1,20 @@
-import { useEffect, useMemo, useState } from "react";
-import { addExpenseInterval, formatDateTime, formatMoney, formatShortDate, getDaysUntilDue, getTodayDate, getYearMonth } from "../gym.shared";
-import type { GymExpense, GymMovement, GymMovementType } from "../gym.types";
+import { useState } from "react";
+import { addExpenseInterval, formatMoney, formatShortDate, getDaysUntilDue } from "../gym.shared";
+import type { GymExpense, GymMovementType } from "../gym.types";
 
 type GymExpensesSectionProps = {
   expenses: GymExpense[];
   onCreate: (expense: { name: string; amount: number; intervalDays: number }) => void;
   onMarkPaid: (expenseId: string) => void;
   onDelete: (expenseId: string) => void;
-  // Gastos diarios (09/10/2026, pedido explicito: "en la parte de los
-  // gastos tenga gastos diarios y los mensuales") -- reusa el mismo
-  // movimiento tipo "gasto" que ya existia en Resumen, solo que ahora
-  // tambien se puede cargar y ver desde aca.
-  movements: GymMovement[];
+  // Gastos diarios (09/10/2026, pedido explicito: "en gastos solo se va a
+  // ingresar nomas... toma el dia de hoy" -- acá es solo alta, sin lista
+  // ni navegacion por dia. Eso se mira desde Resumen, con doble clic en
+  // la tarjeta "Gastos diarios del mes").
   onCreateMovement: (movement: { type: GymMovementType; amount: number | null; note: string }) => void;
-  onDeleteMovement: (movementId: string) => void;
-  // Mes compartido con Resumen (09/10/2026, pedido explicito: "en la
-  // grafica pongo agosto, voy a gastos diarios, ya se sabe que son los
-  // gastos diarios de agosto... hago 2 clics y pongo el dia"). Aca solo
-  // se elige el DIA dentro de ese mes, no el mes -- eso ya viene de
-  // Resumen.
-  selectedMonth: string;
 };
 
-function daysInMonth(monthKey: string) {
-  const [anio, mes] = monthKey.split("-").map(Number);
-  return new Date(anio, mes, 0).getDate();
-}
-
-export function GymExpensesSection({
-  expenses,
-  onCreate,
-  onMarkPaid,
-  onDelete,
-  movements,
-  onCreateMovement,
-  onDeleteMovement,
-  selectedMonth
-}: GymExpensesSectionProps) {
+export function GymExpensesSection({ expenses, onCreate, onMarkPaid, onDelete, onCreateMovement }: GymExpensesSectionProps) {
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [intervalDays, setIntervalDays] = useState("30");
@@ -44,21 +22,6 @@ export function GymExpensesSection({
 
   const [dailyNote, setDailyNote] = useState("");
   const [dailyAmount, setDailyAmount] = useState("");
-
-  // Dia dentro del mes elegido en Resumen. Si el mes elegido es el actual,
-  // arranca en el dia de hoy; si es otro mes, arranca en el dia 1. Al
-  // cambiar de mes (desde Resumen) se reacomoda solo.
-  const [selectedDay, setSelectedDay] = useState(() => {
-    const today = getTodayDate();
-    return getYearMonth(today) === selectedMonth ? Number(today.split("-")[2]) : 1;
-  });
-
-  useEffect(() => {
-    const today = getTodayDate();
-    setSelectedDay(getYearMonth(today) === selectedMonth ? Number(today.split("-")[2]) : 1);
-  }, [selectedMonth]);
-
-  const selectedDailyDate = `${selectedMonth}-${String(selectedDay).padStart(2, "0")}`;
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -85,19 +48,12 @@ export function GymExpensesSection({
     setDailyAmount("");
   }
 
-  const dailyExpenses = useMemo(
-    () =>
-      movements
-        .filter((movement) => movement.type === "gasto" && movement.date === selectedDailyDate)
-        .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
-    [movements, selectedDailyDate]
-  );
-
   const sorted = [...expenses].sort((a, b) => getDaysUntilDue(a.dueDate) - getDaysUntilDue(b.dueDate));
 
   return (
     <div className="gym-tab-content">
       <h2 className="gym-section-title">Gastos diarios</h2>
+      <p className="gym-hint">Se carga con la fecha de hoy. Para ver los gastos diarios de otro día, mirá el Resumen.</p>
       <form className="gym-form" onSubmit={handleSubmitDaily}>
         <label className="gym-form-note">
           <span>Concepto</span>
@@ -122,41 +78,6 @@ export function GymExpensesSection({
           Cargar gasto diario
         </button>
       </form>
-
-      <label className="gym-daily-date-picker">
-        <span>Gasto diario del día</span>
-        <input
-          type="number"
-          min="1"
-          max={daysInMonth(selectedMonth)}
-          value={selectedDay}
-          onChange={(event) => {
-            const parsed = Number(event.target.value);
-            if (Number.isFinite(parsed)) {
-              setSelectedDay(Math.min(Math.max(1, parsed), daysInMonth(selectedMonth)));
-            }
-          }}
-        />
-        <span className="gym-hint">{formatShortDate(selectedDailyDate)}</span>
-      </label>
-
-      <div className="gym-movement-list">
-        {dailyExpenses.length === 0 ? (
-          <p className="gym-hint">No hay gastos diarios cargados ese día.</p>
-        ) : (
-          dailyExpenses.map((movement) => (
-            <div key={movement.id} className="gym-movement-row">
-              <span className="gym-badge">Gasto</span>
-              <span>{movement.amount !== null ? formatMoney(movement.amount) : "-"}</span>
-              <span className="gym-hint">{movement.note || "-"}</span>
-              <span className="gym-hint">{formatDateTime(movement.createdAt)}</span>
-              <button type="button" className="gym-ghost-button gym-ghost-button--danger" onClick={() => onDeleteMovement(movement.id)}>
-                Borrar
-              </button>
-            </div>
-          ))
-        )}
-      </div>
 
       <h2 className="gym-section-title">Gastos mensuales</h2>
       <form className="gym-form" onSubmit={handleSubmit}>

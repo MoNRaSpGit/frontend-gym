@@ -423,10 +423,7 @@ export function GymHomePage({ userName, onLogout, onSessionExpired }: GymHomePag
             onCreate={handleCreateExpense}
             onMarkPaid={handleMarkExpensePaid}
             onDelete={handleDeleteExpense}
-            movements={data.movements}
             onCreateMovement={handleCreateMovement}
-            onDeleteMovement={handleDeleteMovement}
-            selectedMonth={selectedMonth}
           />
         ) : null}
         {tab === "tienda" ? (

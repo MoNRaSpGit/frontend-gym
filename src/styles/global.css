@@ -359,6 +359,20 @@ button {
   border-left-color: #d6a93d;
 }
 
+.gym-summary-card--clickable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.gym-daily-panel {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
 .gym-summary-month-label {
   margin: 0;
   font-weight: 700;

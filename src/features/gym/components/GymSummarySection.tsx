@@ -1,7 +1,12 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { GraficoResumenMensual, type GymMonthHistoryItem } from "./GraficoResumenMensual";
-import { formatDateTime, formatMoney, getYearMonth } from "../gym.shared";
+import { formatDateTime, formatMoney, getTodayDate, getYearMonth } from "../gym.shared";
 import { GYM_MOVEMENT_TYPE_LABELS, type GymMovement } from "../gym.types";
+
+function daysInMonth(monthKey: string) {
+  const [anio, mes] = monthKey.split("-").map(Number);
+  return new Date(anio, mes, 0).getDate();
+}
 
 type GymSummarySectionProps = {
   movements: GymMovement[];
@@ -100,6 +105,30 @@ export function GymSummarySection({ movements, onDelete, selectedMonth, onSelect
   const visibleMovements = sortedMovements.slice(0, visibleCount);
   const remaining = sortedMovements.length - visibleCount;
 
+  // Doble clic en "Gastos diarios del mes" (09/10/2026, pedido explicito):
+  // abre un selector de dia (dentro del mes ya elegido arriba) y muestra
+  // los gastos diarios de ese dia puntual. En Gastos solo se cargan (ver
+  // GymExpensesSection) -- este es el unico lugar donde se navegan/borran.
+  const [isDailyPanelOpen, setIsDailyPanelOpen] = useState(false);
+  const [selectedDay, setSelectedDay] = useState(() => {
+    const today = getTodayDate();
+    return getYearMonth(today) === selectedMonth ? Number(today.split("-")[2]) : 1;
+  });
+
+  useEffect(() => {
+    const today = getTodayDate();
+    setSelectedDay(getYearMonth(today) === selectedMonth ? Number(today.split("-")[2]) : 1);
+  }, [selectedMonth]);
+
+  const selectedDailyDate = `${selectedMonth}-${String(selectedDay).padStart(2, "0")}`;
+  const dailyExpenses = useMemo(
+    () =>
+      monthMovements
+        .filter((movement) => movement.type === "gasto" && movement.date === selectedDailyDate)
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    [monthMovements, selectedDailyDate]
+  );
+
   return (
     <div className="gym-tab-content">
       <p className="gym-summary-month-label">{formatMonthLabel(selectedMonth)}</p>
@@ -117,7 +146,11 @@ export function GymSummarySection({ movements, onDelete, selectedMonth, onSelect
           <span className="gym-hint">Tienda del mes</span>
           <strong>{formatMoney(ingresosProductos)}</strong>
         </div>
-        <div className="gym-summary-card gym-summary-card--egresos">
+        <div
+          className="gym-summary-card gym-summary-card--egresos gym-summary-card--clickable"
+          onDoubleClick={() => setIsDailyPanelOpen((open) => !open)}
+          title="Doble clic para ver los gastos diarios de un día puntual"
+        >
           <span className="gym-hint">Gastos diarios del mes</span>
           <strong>{formatMoney(egresos)}</strong>
         </div>
@@ -126,6 +159,45 @@ export function GymSummarySection({ movements, onDelete, selectedMonth, onSelect
           <strong>{formatMoney(ingresos - egresos)}</strong>
         </div>
       </div>
+
+      {isDailyPanelOpen ? (
+        <div className="gym-daily-panel">
+          <label className="gym-daily-date-picker">
+            <span>Gastos diarios del día</span>
+            <input
+              type="number"
+              min="1"
+              max={daysInMonth(selectedMonth)}
+              value={selectedDay}
+              onChange={(event) => {
+                const parsed = Number(event.target.value);
+                if (Number.isFinite(parsed)) {
+                  setSelectedDay(Math.min(Math.max(1, parsed), daysInMonth(selectedMonth)));
+                }
+              }}
+            />
+            <span className="gym-hint">{formatMoney(dailyExpenses.reduce((sum, m) => sum + (m.amount ?? 0), 0))}</span>
+          </label>
+
+          <div className="gym-movement-list">
+            {dailyExpenses.length === 0 ? (
+              <p className="gym-hint">No hay gastos diarios cargados ese día.</p>
+            ) : (
+              dailyExpenses.map((movement) => (
+                <div key={movement.id} className="gym-movement-row gym-movement-row--gasto">
+                  <span className="gym-badge">Gasto</span>
+                  <span>{movement.amount !== null ? formatMoney(movement.amount) : "-"}</span>
+                  <span className="gym-hint">{movement.note || "-"}</span>
+                  <span className="gym-hint">{formatDateTime(movement.createdAt)}</span>
+                  <button type="button" className="gym-ghost-button gym-ghost-button--danger" onClick={() => onDelete(movement.id)}>
+                    Borrar
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      ) : null}
 
       <GraficoResumenMensual meses={monthlyHistory} selectedMonth={selectedMonth} onSelectMonth={handleSelectMonth} />
 
