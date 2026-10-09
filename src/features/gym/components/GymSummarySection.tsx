@@ -1,15 +1,16 @@
 import { useMemo, useState } from "react";
 import { GraficoResumenMensual, type GymMonthHistoryItem } from "./GraficoResumenMensual";
-import { formatDateTime, formatMoney, getTodayDate, getYearMonth } from "../gym.shared";
-import { GYM_MOVEMENT_TYPE_LABELS, type GymMovement, type GymMovementType } from "../gym.types";
+import { formatDateTime, formatMoney, getYearMonth } from "../gym.shared";
+import { GYM_MOVEMENT_TYPE_LABELS, type GymMovement } from "../gym.types";
 
 type GymSummarySectionProps = {
   movements: GymMovement[];
-  onCreate: (movement: { type: GymMovementType; amount: number | null; note: string }) => void;
   onDelete: (movementId: string) => void;
+  // Mes compartido con Gastos (09/10/2026, pedido explicito) -- vive en
+  // GymHomePage, no aca adentro.
+  selectedMonth: string;
+  onSelectMonth: (month: string) => void;
 };
-
-const TYPES_WITH_AMOUNT: GymMovementType[] = ["cobro", "gasto", "producto"];
 
 const NOMBRES_MES = [
   "Enero",
@@ -31,28 +32,16 @@ function formatMonthLabel(key: string) {
   return `${NOMBRES_MES[mes - 1]} ${anio}`;
 }
 
-export function GymSummarySection({ movements, onCreate, onDelete }: GymSummarySectionProps) {
-  const [type, setType] = useState<GymMovementType>("cobro");
-  const [amount, setAmount] = useState("");
-  const [note, setNote] = useState("");
+// Verde = entra plata (cobro, producto), rojo = sale plata (gasto) --
+// pedido explicito (09/10/2026): "lo que es como un ingreso en verde, lo
+// que es como un gasto en rojo, para asimilar rapido".
+function movementColorClass(type: GymMovement["type"]) {
+  if (type === "cobro" || type === "producto") return "gym-movement-row--ingreso";
+  if (type === "gasto") return "gym-movement-row--gasto";
+  return "";
+}
 
-  const needsAmount = TYPES_WITH_AMOUNT.includes(type);
-
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const parsedAmount = needsAmount ? Number(amount.replace(",", ".")) : null;
-    if (needsAmount && (!Number.isFinite(parsedAmount) || (parsedAmount ?? 0) <= 0)) return;
-
-    onCreate({ type, amount: parsedAmount, note: note.trim() });
-    setAmount("");
-    setNote("");
-  }
-
-  // Mes seleccionado en la grafica (09/10/2026, pedido explicito: "si
-  // apreto el mes, ejemplo sep, me muestra lo que paso en ese mes,
-  // ingresos y demas"). Arranca en el mes actual.
-  const currentMonth = getYearMonth(getTodayDate());
-  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+export function GymSummarySection({ movements, onDelete, selectedMonth, onSelectMonth }: GymSummarySectionProps) {
   const monthMovements = useMemo(
     () => movements.filter((movement) => getYearMonth(movement.date) === selectedMonth),
     [movements, selectedMonth]
@@ -90,8 +79,7 @@ export function GymSummarySection({ movements, onCreate, onDelete }: GymSummaryS
   }, [movements]);
 
   // Lista de abajo filtrada por el mismo mes elegido arriba (09/10/2026,
-  // pedido explicito: "si pongo agosto, me muestra eso" -- antes
-  // mostraba siempre todos los movimientos, sin importar el mes activo).
+  // pedido explicito: "si pongo agosto, me muestra eso").
   const sortedMovements = useMemo(
     () => [...monthMovements].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
     [monthMovements]
@@ -106,7 +94,7 @@ export function GymSummarySection({ movements, onCreate, onDelete }: GymSummaryS
   // Si se cambia de mes, se vuelve a arrancar mostrando solo 5 (sino
   // quedaba "Ver todos" ya apretado de un mes anterior con mas datos).
   const handleSelectMonth = (key: string) => {
-    setSelectedMonth(key);
+    onSelectMonth(key);
     setVisibleCount(PAGE_SIZE);
   };
   const visibleMovements = sortedMovements.slice(0, visibleCount);
@@ -114,32 +102,6 @@ export function GymSummarySection({ movements, onCreate, onDelete }: GymSummaryS
 
   return (
     <div className="gym-tab-content">
-      <form className="gym-form" onSubmit={handleSubmit}>
-        <label>
-          <span>Tipo</span>
-          <select value={type} onChange={(event) => setType(event.target.value as GymMovementType)}>
-            {(Object.keys(GYM_MOVEMENT_TYPE_LABELS) as GymMovementType[]).map((item) => (
-              <option key={item} value={item}>
-                {GYM_MOVEMENT_TYPE_LABELS[item]}
-              </option>
-            ))}
-          </select>
-        </label>
-        {needsAmount ? (
-          <label>
-            <span>Monto</span>
-            <input type="text" inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value)} />
-          </label>
-        ) : null}
-        <label className="gym-form-note">
-          <span>Nota (opcional)</span>
-          <input type="text" placeholder="Ej: Juan Pérez" value={note} onChange={(event) => setNote(event.target.value)} />
-        </label>
-        <button type="submit" className="gym-primary-button">
-          Cargar movimiento
-        </button>
-      </form>
-
       <p className="gym-summary-month-label">{formatMonthLabel(selectedMonth)}</p>
 
       <div className="gym-summary-cards">
@@ -172,7 +134,7 @@ export function GymSummarySection({ movements, onCreate, onDelete }: GymSummaryS
           <p className="gym-hint">No hay movimientos en {formatMonthLabel(selectedMonth).toLowerCase()}.</p>
         ) : (
           visibleMovements.map((movement) => (
-            <div key={movement.id} className="gym-movement-row">
+            <div key={movement.id} className={`gym-movement-row ${movementColorClass(movement.type)}`}>
               <span className="gym-badge">{GYM_MOVEMENT_TYPE_LABELS[movement.type]}</span>
               <span>{movement.amount !== null ? formatMoney(movement.amount) : "-"}</span>
               <span className="gym-hint">{movement.note || "-"}</span>

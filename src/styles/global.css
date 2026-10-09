@@ -226,6 +226,7 @@ button {
 }
 
 .gym-daily-date-picker input {
+  width: 64px;
   padding: 8px 10px;
   border-radius: var(--radius);
   border: 1px solid var(--color-border);
@@ -419,6 +420,17 @@ button {
   border: 1px solid var(--color-border);
   border-radius: 10px;
   background: var(--color-surface);
+}
+
+/* Verde = entra plata, rojo = sale plata (09/10/2026, pedido explicito). */
+.gym-movement-row--ingreso {
+  border-left: 4px solid var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 6%, var(--color-surface));
+}
+
+.gym-movement-row--gasto {
+  border-left: 4px solid var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 6%, var(--color-surface));
 }
 
 @media (max-width: 560px) {

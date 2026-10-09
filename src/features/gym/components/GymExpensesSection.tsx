@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { addExpenseInterval, formatDateTime, formatMoney, formatShortDate, getDaysUntilDue, getTodayDate } from "../gym.shared";
+import { useEffect, useMemo, useState } from "react";
+import { addExpenseInterval, formatDateTime, formatMoney, formatShortDate, getDaysUntilDue, getTodayDate, getYearMonth } from "../gym.shared";
 import type { GymExpense, GymMovement, GymMovementType } from "../gym.types";
 
 type GymExpensesSectionProps = {
@@ -14,7 +14,18 @@ type GymExpensesSectionProps = {
   movements: GymMovement[];
   onCreateMovement: (movement: { type: GymMovementType; amount: number | null; note: string }) => void;
   onDeleteMovement: (movementId: string) => void;
+  // Mes compartido con Resumen (09/10/2026, pedido explicito: "en la
+  // grafica pongo agosto, voy a gastos diarios, ya se sabe que son los
+  // gastos diarios de agosto... hago 2 clics y pongo el dia"). Aca solo
+  // se elige el DIA dentro de ese mes, no el mes -- eso ya viene de
+  // Resumen.
+  selectedMonth: string;
 };
+
+function daysInMonth(monthKey: string) {
+  const [anio, mes] = monthKey.split("-").map(Number);
+  return new Date(anio, mes, 0).getDate();
+}
 
 export function GymExpensesSection({
   expenses,
@@ -23,7 +34,8 @@ export function GymExpensesSection({
   onDelete,
   movements,
   onCreateMovement,
-  onDeleteMovement
+  onDeleteMovement,
+  selectedMonth
 }: GymExpensesSectionProps) {
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
@@ -32,12 +44,21 @@ export function GymExpensesSection({
 
   const [dailyNote, setDailyNote] = useState("");
   const [dailyAmount, setDailyAmount] = useState("");
-  // Que dia se esta mirando (09/10/2026, pedido explicito): "si no es muy
-  // dificil, a que dia... vamos a poner que el gasto diario tenga abajo
-  // la fecha que esta mostrando, y si le hago clic me permite cambiarla".
-  // Un selector de fecha nativo en vez de texto libre, para no depender
-  // de que se escriba bien el formato -- arranca en el dia de hoy.
-  const [selectedDailyDate, setSelectedDailyDate] = useState(getTodayDate());
+
+  // Dia dentro del mes elegido en Resumen. Si el mes elegido es el actual,
+  // arranca en el dia de hoy; si es otro mes, arranca en el dia 1. Al
+  // cambiar de mes (desde Resumen) se reacomoda solo.
+  const [selectedDay, setSelectedDay] = useState(() => {
+    const today = getTodayDate();
+    return getYearMonth(today) === selectedMonth ? Number(today.split("-")[2]) : 1;
+  });
+
+  useEffect(() => {
+    const today = getTodayDate();
+    setSelectedDay(getYearMonth(today) === selectedMonth ? Number(today.split("-")[2]) : 1);
+  }, [selectedMonth]);
+
+  const selectedDailyDate = `${selectedMonth}-${String(selectedDay).padStart(2, "0")}`;
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -103,8 +124,20 @@ export function GymExpensesSection({
       </form>
 
       <label className="gym-daily-date-picker">
-        <span>Gasto diario del</span>
-        <input type="date" value={selectedDailyDate} onChange={(event) => setSelectedDailyDate(event.target.value)} />
+        <span>Gasto diario del día</span>
+        <input
+          type="number"
+          min="1"
+          max={daysInMonth(selectedMonth)}
+          value={selectedDay}
+          onChange={(event) => {
+            const parsed = Number(event.target.value);
+            if (Number.isFinite(parsed)) {
+              setSelectedDay(Math.min(Math.max(1, parsed), daysInMonth(selectedMonth)));
+            }
+          }}
+        />
+        <span className="gym-hint">{formatShortDate(selectedDailyDate)}</span>
       </label>
 
       <div className="gym-movement-list">

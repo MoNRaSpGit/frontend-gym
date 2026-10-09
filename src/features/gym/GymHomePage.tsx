@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { fetchGymWorkspace, GymConflictError, GymUnauthorizedError, saveGymWorkspace } from "./gym.client";
-import { addExpenseInterval, computeExpenseAfterPayment, generateId, getRenewedDueDate, getStudentStatus, getTodayDate } from "./gym.shared";
+import { addExpenseInterval, computeExpenseAfterPayment, generateId, getRenewedDueDate, getStudentStatus, getTodayDate, getYearMonth } from "./gym.shared";
 import type {
   GymAuditAction,
   GymAuditEntry,
@@ -38,6 +38,11 @@ type GymHomePageProps = {
 
 export function GymHomePage({ userName, onLogout, onSessionExpired }: GymHomePageProps) {
   const [tab, setTab] = useState<GymTab>("alumnos");
+  // Mes compartido entre Resumen y Gastos (09/10/2026, pedido explicito:
+  // "en la grafica pongo agosto, voy a gastos diarios, ya se sabe que son
+  // los gastos diarios de agosto"). Vive aca arriba, no en cada pestana
+  // por separado.
+  const [selectedMonth, setSelectedMonth] = useState(getYearMonth(getTodayDate()));
   const [data, setData] = useState<GymWorkspaceData>(EMPTY_DATA);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -421,13 +426,19 @@ export function GymHomePage({ userName, onLogout, onSessionExpired }: GymHomePag
             movements={data.movements}
             onCreateMovement={handleCreateMovement}
             onDeleteMovement={handleDeleteMovement}
+            selectedMonth={selectedMonth}
           />
         ) : null}
         {tab === "tienda" ? (
           <GymShopSection movements={data.movements} onCreate={handleCreateMovement} onDelete={handleDeleteMovement} />
         ) : null}
         {tab === "resumen" ? (
-          <GymSummarySection movements={data.movements} onCreate={handleCreateMovement} onDelete={handleDeleteMovement} />
+          <GymSummarySection
+            movements={data.movements}
+            onDelete={handleDeleteMovement}
+            selectedMonth={selectedMonth}
+            onSelectMonth={setSelectedMonth}
+          />
         ) : null}
       </main>
     </div>
