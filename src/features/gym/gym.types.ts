@@ -30,7 +30,20 @@ export type GymStudentPlan = "mensual" | "trimestral" | "semestral" | "anual";
 // "gimnasio" es la generica de siempre (musculacion); el resto son
 // actividades con pelota -- se les pone el emoji de su pelota al lado
 // del nombre en la lista (ver GYM_STUDENT_CATEGORY_ICONS).
-export type GymStudentCategory = "gimnasio" | "futbol" | "voley" | "basquet" | "otro";
+// Pedido explicito (09/10/2026): se suman categorias de gimnasio puro
+// para la cuenta nueva "alegym" (Preparacion deportiva, Funcional,
+// Musculacion, Zumba) -- se agregan a la lista en vez de reemplazarla,
+// asi el cliente real de "ale" (futbol/voley/basquet) sigue igual.
+export type GymStudentCategory =
+  | "gimnasio"
+  | "futbol"
+  | "voley"
+  | "basquet"
+  | "preparacion_deportiva"
+  | "funcional"
+  | "musculacion"
+  | "zumba"
+  | "otro";
 
 export type GymStudent = {
   id: string;
@@ -101,6 +114,10 @@ export const GYM_STUDENT_CATEGORY_LABELS: Record<GymStudentCategory, string> = {
   futbol: "Fútbol",
   voley: "Vóley",
   basquet: "Básquet",
+  preparacion_deportiva: "Preparación deportiva",
+  funcional: "Funcional",
+  musculacion: "Musculación",
+  zumba: "Zumba",
   otro: "Otro"
 };
 
@@ -111,6 +128,10 @@ export const GYM_STUDENT_CATEGORY_ICONS: Record<GymStudentCategory, string> = {
   futbol: "⚽",
   voley: "🏐",
   basquet: "🏀",
+  preparacion_deportiva: "🏃",
+  funcional: "🤸",
+  musculacion: "💪",
+  zumba: "💃",
   otro: "🏷️"
 };
 

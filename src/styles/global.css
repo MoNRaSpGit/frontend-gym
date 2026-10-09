@@ -212,6 +212,11 @@ button {
   gap: 24px;
 }
 
+.gym-section-title {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
 /* Formularios */
 .gym-form {
   display: flex;
@@ -306,12 +311,43 @@ button {
   gap: 4px;
   padding: 16px;
   border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-border);
   border-radius: var(--radius);
   background: var(--color-surface);
 }
 
 .gym-summary-card strong {
   font-size: 20px;
+}
+
+/* Colores distintos por tarjeta (09/10/2026, pedido explicito). */
+.gym-summary-card--ingresos {
+  border-left-color: #2f9e62;
+}
+
+.gym-summary-card--cuotas {
+  border-left-color: #3d7fd6;
+}
+
+.gym-summary-card--tienda {
+  border-left-color: #a855c9;
+}
+
+.gym-summary-card--egresos {
+  border-left-color: var(--color-danger);
+}
+
+.gym-summary-card--neto {
+  border-left-color: #d6a93d;
+}
+
+.gym-summary-month-label {
+  margin: 0;
+  font-weight: 700;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.04em;
 }
 
 .gym-chart-card {
@@ -337,10 +373,19 @@ button {
   fill: var(--color-muted);
 }
 
+.gym-chart-etiqueta--selected {
+  fill: var(--color-accent);
+  font-weight: 700;
+}
+
 .gym-chart-valor {
   font-size: 11px;
   font-weight: 700;
   fill: var(--color-text);
+}
+
+.gym-chart-punto--clickable {
+  cursor: pointer;
 }
 
 .gym-movement-list {

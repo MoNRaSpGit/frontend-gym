@@ -11,6 +11,26 @@ type GymSummarySectionProps = {
 
 const TYPES_WITH_AMOUNT: GymMovementType[] = ["cobro", "gasto", "producto"];
 
+const NOMBRES_MES = [
+  "Enero",
+  "Febrero",
+  "Marzo",
+  "Abril",
+  "Mayo",
+  "Junio",
+  "Julio",
+  "Agosto",
+  "Septiembre",
+  "Octubre",
+  "Noviembre",
+  "Diciembre"
+];
+
+function formatMonthLabel(key: string) {
+  const [anio, mes] = key.split("-").map(Number);
+  return `${NOMBRES_MES[mes - 1]} ${anio}`;
+}
+
 export function GymSummarySection({ movements, onCreate, onDelete }: GymSummarySectionProps) {
   const [type, setType] = useState<GymMovementType>("cobro");
   const [amount, setAmount] = useState("");
@@ -28,10 +48,14 @@ export function GymSummarySection({ movements, onCreate, onDelete }: GymSummaryS
     setNote("");
   }
 
+  // Mes seleccionado en la grafica (09/10/2026, pedido explicito: "si
+  // apreto el mes, ejemplo sep, me muestra lo que paso en ese mes,
+  // ingresos y demas"). Arranca en el mes actual.
   const currentMonth = getYearMonth(getTodayDate());
+  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const monthMovements = useMemo(
-    () => movements.filter((movement) => getYearMonth(movement.date) === currentMonth),
-    [movements, currentMonth]
+    () => movements.filter((movement) => getYearMonth(movement.date) === selectedMonth),
+    [movements, selectedMonth]
   );
 
   const ingresosCuotas = monthMovements
@@ -107,30 +131,32 @@ export function GymSummarySection({ movements, onCreate, onDelete }: GymSummaryS
         </button>
       </form>
 
+      <p className="gym-summary-month-label">{formatMonthLabel(selectedMonth)}</p>
+
       <div className="gym-summary-cards">
-        <div className="gym-summary-card">
+        <div className="gym-summary-card gym-summary-card--ingresos">
           <span className="gym-hint">Ingresos del mes</span>
           <strong>{formatMoney(ingresos)}</strong>
         </div>
-        <div className="gym-summary-card">
+        <div className="gym-summary-card gym-summary-card--cuotas">
           <span className="gym-hint">Cuotas del mes</span>
           <strong>{formatMoney(ingresosCuotas)}</strong>
         </div>
-        <div className="gym-summary-card">
+        <div className="gym-summary-card gym-summary-card--tienda">
           <span className="gym-hint">Tienda del mes</span>
           <strong>{formatMoney(ingresosProductos)}</strong>
         </div>
-        <div className="gym-summary-card">
+        <div className="gym-summary-card gym-summary-card--egresos">
           <span className="gym-hint">Egresos del mes</span>
           <strong>{formatMoney(egresos)}</strong>
         </div>
-        <div className="gym-summary-card">
+        <div className="gym-summary-card gym-summary-card--neto">
           <span className="gym-hint">Neto del mes</span>
           <strong>{formatMoney(ingresos - egresos)}</strong>
         </div>
       </div>
 
-      <GraficoResumenMensual meses={monthlyHistory} />
+      <GraficoResumenMensual meses={monthlyHistory} selectedMonth={selectedMonth} onSelectMonth={setSelectedMonth} />
 
       <div className="gym-movement-list">
         {visibleMovements.length === 0 ? (

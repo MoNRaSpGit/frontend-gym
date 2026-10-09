@@ -30,11 +30,20 @@ function formatearPesos(valor: number) {
 
 export type GymMonthHistoryItem = { anio: number; mes: number; total: number };
 
+function monthKey(anio: number, mes: number) {
+  return `${anio}-${String(mes).padStart(2, "0")}`;
+}
+
 type GraficoResumenMensualProps = {
   meses: GymMonthHistoryItem[];
+  // Clic en un mes (09/10/2026, pedido explicito): "si apreto el mes,
+  // ejemplo sep, me muestra lo que paso ese mes" -- el punto elegido
+  // queda resaltado.
+  selectedMonth?: string;
+  onSelectMonth?: (key: string) => void;
 };
 
-export function GraficoResumenMensual({ meses }: GraficoResumenMensualProps) {
+export function GraficoResumenMensual({ meses, selectedMonth, onSelectMonth }: GraficoResumenMensualProps) {
   if (meses.length === 0) {
     return <p className="gym-hint">Todavía no hay movimientos para graficar.</p>;
   }
@@ -78,22 +87,44 @@ export function GraficoResumenMensual({ meses }: GraficoResumenMensualProps) {
         <path d={pathArea} fill="url(#gym-mes-relleno)" stroke="none" />
         <path d={pathLinea} fill="none" stroke="var(--color-accent)" strokeWidth="2.5" strokeLinecap="round" />
 
-        {puntos.map((p) => (
-          <g key={`${p.anio}-${p.mes}`}>
-            {p.total !== 0 ? (
-              <text x={p.x} y={p.y - 12} textAnchor="middle" className="gym-chart-valor">
-                {formatearPesos(p.total)}
+        {puntos.map((p) => {
+          const key = monthKey(p.anio, p.mes);
+          const isSelected = key === selectedMonth;
+          return (
+            <g
+              key={key}
+              onClick={() => onSelectMonth?.(key)}
+              className={onSelectMonth ? "gym-chart-punto gym-chart-punto--clickable" : "gym-chart-punto"}
+            >
+              {/* Zona invisible mas grande para que sea facil de tocar en el celular. */}
+              <circle cx={p.x} cy={p.y} r="14" fill="transparent" />
+              {p.total !== 0 ? (
+                <text x={p.x} y={p.y - 12} textAnchor="middle" className="gym-chart-valor">
+                  {formatearPesos(p.total)}
+                </text>
+              ) : null}
+              <circle
+                cx={p.x}
+                cy={p.y}
+                r={isSelected ? "6" : "4"}
+                fill={isSelected ? "var(--color-accent)" : "var(--color-surface)"}
+                stroke="var(--color-accent)"
+                strokeWidth="2.5"
+              />
+              <title>
+                {NOMBRES_MES_CORTO[p.mes - 1]} {p.anio}: {formatearPesos(p.total)}
+              </title>
+              <text
+                x={p.x}
+                y={ALTO - 10}
+                textAnchor="middle"
+                className={isSelected ? "gym-chart-etiqueta gym-chart-etiqueta--selected" : "gym-chart-etiqueta"}
+              >
+                {NOMBRES_MES_CORTO[p.mes - 1]}
               </text>
-            ) : null}
-            <circle cx={p.x} cy={p.y} r="4" fill="var(--color-surface)" stroke="var(--color-accent)" strokeWidth="2.5" />
-            <title>
-              {NOMBRES_MES_CORTO[p.mes - 1]} {p.anio}: {formatearPesos(p.total)}
-            </title>
-            <text x={p.x} y={ALTO - 10} textAnchor="middle" className="gym-chart-etiqueta">
-              {NOMBRES_MES_CORTO[p.mes - 1]}
-            </text>
-          </g>
-        ))}
+            </g>
+          );
+        })}
       </svg>
     </div>
   );

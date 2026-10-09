@@ -96,7 +96,17 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
   }, [students]);
 
   const categoryCounts = useMemo(() => {
-    const result: Record<GymStudentCategory, number> = { gimnasio: 0, futbol: 0, voley: 0, basquet: 0, otro: 0 };
+    const result: Record<GymStudentCategory, number> = {
+      gimnasio: 0,
+      futbol: 0,
+      voley: 0,
+      basquet: 0,
+      preparacion_deportiva: 0,
+      funcional: 0,
+      musculacion: 0,
+      zumba: 0,
+      otro: 0
+    };
     for (const student of students) result[student.category ?? "gimnasio"] += 1;
     return result;
   }, [students]);
@@ -107,7 +117,9 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
       .filter((student) => (filter === "all" ? true : getStudentStatus(student.dueDate) === filter))
       .filter((student) => (categoryFilter === "all" ? true : (student.category ?? "gimnasio") === categoryFilter))
       .filter((student) => (term ? student.name.toLowerCase().includes(term) || student.phone.includes(term) : true))
-      .sort((a, b) => a.dueDate.localeCompare(b.dueDate) || a.name.localeCompare(b.name));
+      // Orden alfabetico (09/10/2026, pedido explicito) -- antes se
+      // ordenaba primero por vencimiento.
+      .sort((a, b) => a.name.localeCompare(b.name));
   }, [students, search, filter, categoryFilter]);
 
   function updateForm<K extends keyof FormState>(key: K, value: FormState[K]) {
