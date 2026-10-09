@@ -21,13 +21,26 @@ export function formatShortDate(value: string): string {
   return `${day}/${month}/${year.slice(2)}`;
 }
 
+// Numero real del dueño del gym (Ale) -- pedido explicito (10/10/2026).
+// Hoy no se usa como destino de los WhatsApp porque esta activo el
+// override de pruebas de aca abajo; queda guardado para cuando se saque
+// ese override.
+export const GYM_OWNER_PHONE = "098221822";
+
+// TEMPORAL (10/10/2026, pedido explicito: "para que vaya probando"): todos
+// los mensajes de WhatsApp van al numero de prueba del usuario, sin
+// importar el telefono real del alumno. Para volver a mandarlos al alumno
+// real, poner este valor en null (o borrar el override de abajo).
+const WHATSAPP_TESTING_OVERRIDE_PHONE: string | null = "092945696";
+
 // Link de WhatsApp (09/10/2026, pedido explicito): "que abra la
 // conversacion... que el mensaje lo termine de enviar yo, el humano" --
 // es un simple wa.me con texto precargado, no manda nada solo. Numeros
 // uruguayos se escriben con el 0 inicial (ej: "092 945 696"); wa.me
 // necesita el numero completo con codigo de pais (598) y sin ese 0.
 export function buildWhatsAppLink(phone: string, message: string): string {
-  const digits = phone.replace(/\D/g, "");
+  const targetPhone = WHATSAPP_TESTING_OVERRIDE_PHONE ?? phone;
+  const digits = targetPhone.replace(/\D/g, "");
   const withoutLeadingZero = digits.startsWith("0") ? digits.slice(1) : digits;
   const withCountryCode = withoutLeadingZero.startsWith("598") ? withoutLeadingZero : `598${withoutLeadingZero}`;
   return `https://wa.me/${withCountryCode}?text=${encodeURIComponent(message)}`;
