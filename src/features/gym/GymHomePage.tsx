@@ -9,6 +9,7 @@ import type {
   GymExpense,
   GymMovement,
   GymMovementType,
+  GymProgressRecord,
   GymStudent,
   GymWorkspaceData
 } from "./gym.types";
@@ -17,18 +18,31 @@ import { GymSummarySection } from "./components/GymSummarySection";
 import { GymStudentsSection, type GymStudentInput } from "./components/GymStudentsSection";
 import { GymCheckInSection } from "./components/GymCheckInSection";
 import { GymShopSection } from "./components/GymShopSection";
+import { GymProgressSection, type GymProgressInput } from "./components/GymProgressSection";
 
-type GymTab = "alumnos" | "gastos" | "tienda" | "resumen" | "ingresar";
+type GymTab = "alumnos" | "progreso" | "gastos" | "tienda" | "resumen" | "ingresar";
 
 const TAB_LABELS: Record<GymTab, string> = {
   alumnos: "Alumnos",
+  progreso: "Mi Progreso",
   gastos: "Gastos",
   tienda: "Tienda",
   resumen: "Resumen",
   ingresar: "Ingresar"
 };
 
-const EMPTY_DATA: GymWorkspaceData = { expenses: [], movements: [], students: [], checkIns: [], auditLog: [] };
+const EMPTY_DATA: GymWorkspaceData = { expenses: [], movements: [], students: [], checkIns: [], progressRecords: [], auditLog: [] };
+
+// Workspaces guardados antes de Alumnos / Ingresar / Mi Progreso no traen
+// esos campos: se completan vacios al cargar.
+function withDefaults(data: GymWorkspaceData): GymWorkspaceData {
+  return {
+    ...data,
+    students: data.students ?? [],
+    checkIns: data.checkIns ?? [],
+    progressRecords: data.progressRecords ?? []
+  };
+}
 
 type GymHomePageProps = {
   userName: string;
@@ -54,7 +68,7 @@ export function GymHomePage({ userName, onLogout, onSessionExpired }: GymHomePag
     fetchGymWorkspace()
       .then((snapshot) => {
         if (cancelled) return;
-        setData({ ...snapshot.data, students: snapshot.data.students ?? [], checkIns: snapshot.data.checkIns ?? [] });
+        setData(withDefaults(snapshot.data));
         rowVersionRef.current = snapshot.rowVersion;
         setLoadError(null);
       })
@@ -129,7 +143,7 @@ export function GymHomePage({ userName, onLogout, onSessionExpired }: GymHomePag
       const snapshot = await fetchGymWorkspace();
       rowVersionRef.current = snapshot.rowVersion;
       skipNextSaveRef.current = true;
-      setData({ ...snapshot.data, students: snapshot.data.students ?? [], checkIns: snapshot.data.checkIns ?? [] });
+      setData(withDefaults(snapshot.data));
     } catch (error) {
       if (error instanceof GymUnauthorizedError) onSessionExpired();
     }
@@ -334,7 +348,39 @@ export function GymHomePage({ userName, onLogout, onSessionExpired }: GymHomePag
       return {
         ...current,
         students: current.students.filter((item) => item.id !== studentId),
+        // Sus mediciones de Mi Progreso se van con el alumno.
+        progressRecords: current.progressRecords.filter((item) => item.studentId !== studentId),
         auditLog: student ? [addAudit("student_deleted", `Alumno borrado: ${student.name}`), ...current.auditLog] : current.auditLog
+      };
+    });
+  }
+
+  function handleCreateProgress(studentId: string, input: GymProgressInput) {
+    const student = data.students.find((item) => item.id === studentId);
+    if (!student) return;
+    const record: GymProgressRecord = {
+      id: generateId("prog"),
+      studentId,
+      ...input,
+      createdAt: new Date().toISOString()
+    };
+    setData((current) => ({
+      ...current,
+      progressRecords: [record, ...current.progressRecords],
+      auditLog: [addAudit("progress_created", `Medición cargada: ${student.name} (${record.date})`), ...current.auditLog]
+    }));
+    toast.success("Medición guardada.");
+  }
+
+  function handleDeleteProgress(recordId: string) {
+    setData((current) => {
+      const record = current.progressRecords.find((item) => item.id === recordId);
+      if (!record) return current;
+      const student = current.students.find((item) => item.id === record.studentId);
+      return {
+        ...current,
+        progressRecords: current.progressRecords.filter((item) => item.id !== recordId),
+        auditLog: [addAudit("progress_deleted", `Medición borrada: ${student?.name ?? "alumno"} (${record.date})`), ...current.auditLog]
       };
     });
   }
@@ -415,6 +461,14 @@ export function GymHomePage({ userName, onLogout, onSessionExpired }: GymHomePag
             onUpdate={handleUpdateStudent}
             onRenew={handleRenewStudent}
             onDelete={handleDeleteStudent}
+          />
+        ) : null}
+        {tab === "progreso" ? (
+          <GymProgressSection
+            students={data.students}
+            records={data.progressRecords}
+            onCreate={handleCreateProgress}
+            onDelete={handleDeleteProgress}
           />
         ) : null}
         {tab === "gastos" ? (

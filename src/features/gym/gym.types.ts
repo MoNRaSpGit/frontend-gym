@@ -56,6 +56,43 @@ export type GymCheckIn = {
   wasOverdue: boolean;
 };
 
+// Medicion de un alumno (pestana "Mi Progreso", 10/10/2026, pedido
+// explicito: "peso, medida de la cintura, medida del biceps, y capaz que
+// alguna otra cosa mas"). Todas las medidas son opcionales: null = ese
+// dia no se midio. Se guardan con un decimal.
+export type GymProgressRecord = {
+  id: string;
+  studentId: string;
+  // Dia de la medicion (YYYY-MM-DD); puede ser anterior a hoy si se
+  // pasan a la app mediciones viejas anotadas en papel.
+  date: string;
+  weightKg: number | null;
+  waistCm: number | null;
+  bicepsCm: number | null;
+  chestCm: number | null;
+  hipsCm: number | null;
+  thighCm: number | null;
+  bodyFatPct: number | null;
+  note: string;
+  createdAt: string;
+};
+
+export type GymProgressMetricKey = "weightKg" | "waistCm" | "bicepsCm" | "chestCm" | "hipsCm" | "thighCm" | "bodyFatPct";
+
+// Las columnas de la tabla, en el orden en que se muestran. Las tres
+// primeras son las que se pidieron; el resto son las medidas que se
+// suelen tomar junto con esas. "max" es solo un tope para atajar errores
+// de tipeo (ej: 725 en vez de 72,5).
+export const GYM_PROGRESS_METRICS: { key: GymProgressMetricKey; label: string; unit: string; max: number }[] = [
+  { key: "weightKg", label: "Peso", unit: "kg", max: 400 },
+  { key: "waistCm", label: "Cintura", unit: "cm", max: 300 },
+  { key: "bicepsCm", label: "Bíceps", unit: "cm", max: 100 },
+  { key: "chestCm", label: "Pecho", unit: "cm", max: 300 },
+  { key: "hipsCm", label: "Cadera", unit: "cm", max: 300 },
+  { key: "thighCm", label: "Muslo", unit: "cm", max: 150 },
+  { key: "bodyFatPct", label: "Grasa corporal", unit: "%", max: 80 }
+];
+
 export type GymAuditAction =
   | "login"
   | "expense_created"
@@ -67,7 +104,9 @@ export type GymAuditAction =
   | "student_renewed"
   | "student_updated"
   | "student_deleted"
-  | "student_checkin";
+  | "student_checkin"
+  | "progress_created"
+  | "progress_deleted";
 
 export type GymAuditEntry = {
   id: string;
@@ -81,6 +120,7 @@ export type GymWorkspaceData = {
   movements: GymMovement[];
   students: GymStudent[];
   checkIns: GymCheckIn[];
+  progressRecords: GymProgressRecord[];
   auditLog: GymAuditEntry[];
 };
 
