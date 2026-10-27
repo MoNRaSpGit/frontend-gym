@@ -93,7 +93,9 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<StatusFilter>("all");
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
-  const [confirming, setConfirming] = useState<{ id: string; action: "renew" | "delete" } | null>(null);
+  const [confirming, setConfirming] = useState<{ id: string; action: "renew" | "delete" | "renewInvoice"; dueDate?: string } | null>(
+    null
+  );
 
   const counts = useMemo(() => {
     const result: Record<StudentStatus, number> = { green: 0, yellow: 0, red: 0 };
@@ -387,6 +389,7 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
             const daysLeft = getDaysUntilDue(student.dueDate);
             const isConfirmingRenew = confirming?.id === student.id && confirming.action === "renew";
             const isConfirmingDelete = confirming?.id === student.id && confirming.action === "delete";
+            const isConfirmingInvoice = confirming?.id === student.id && confirming.action === "renewInvoice";
 
             return (
               <div key={student.id} className={`gym-student-card gym-student-card--${status}`}>
@@ -440,12 +443,40 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
                         type="button"
                         className="gym-primary-button gym-primary-button--small"
                         onClick={() => {
+                          const renewedDueDate = getRenewedDueDate(student);
                           onRenew(student.id);
-                          setConfirming(null);
+                          // Despues de renovar (27/10/2026, pedido explicito, solo
+                          // Pablo): pregunta aparte si manda la factura. La fecha
+                          // se guarda ya calculada, no se espera a que el padre
+                          // refresque students con el nuevo vencimiento.
+                          if (showInvoiceButton && student.phone) {
+                            setConfirming({ id: student.id, action: "renewInvoice", dueDate: renewedDueDate });
+                          } else {
+                            setConfirming(null);
+                          }
                         }}
                       >
                         Confirmar
                       </button>
+                      <button type="button" className="gym-ghost-button" onClick={() => setConfirming(null)}>
+                        No
+                      </button>
+                    </div>
+                  ) : isConfirmingInvoice ? (
+                    <div className="gym-confirm">
+                      <span>¿Enviar factura?</span>
+                      <a
+                        className="gym-primary-button gym-primary-button--small"
+                        href={buildWhatsAppLink(
+                          student.phone,
+                          buildInvoiceMessage(student.name, student.fee, confirming?.dueDate ?? student.dueDate)
+                        )}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={() => setConfirming(null)}
+                      >
+                        Sí
+                      </a>
                       <button type="button" className="gym-ghost-button" onClick={() => setConfirming(null)}>
                         No
                       </button>
