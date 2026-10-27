@@ -46,11 +46,12 @@ function withDefaults(data: GymWorkspaceData): GymWorkspaceData {
 
 type GymHomePageProps = {
   userName: string;
+  workspaceKey: string;
   onLogout: () => void;
   onSessionExpired: () => void;
 };
 
-export function GymHomePage({ userName, onLogout, onSessionExpired }: GymHomePageProps) {
+export function GymHomePage({ userName, workspaceKey, onLogout, onSessionExpired }: GymHomePageProps) {
   const [tab, setTab] = useState<GymTab>("alumnos");
   // Mes compartido entre Resumen y Gastos (09/10/2026, pedido explicito:
   // "en la grafica pongo agosto, voy a gastos diarios, ya se sabe que son
@@ -461,6 +462,7 @@ export function GymHomePage({ userName, onLogout, onSessionExpired }: GymHomePag
             onUpdate={handleUpdateStudent}
             onRenew={handleRenewStudent}
             onDelete={handleDeleteStudent}
+            showInvoiceButton={workspaceKey === "pablom"}
           />
         ) : null}
         {tab === "progreso" ? (

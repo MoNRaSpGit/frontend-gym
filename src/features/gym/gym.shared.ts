@@ -51,6 +51,14 @@ export function buildOverdueFeeMessage(studentName: string, dueDate: string): st
   return `Estimado cliente ${studentName}:\n\nSegún nuestros registros, su cuota venció el ${formatShortDate(dueDate)}.\n\nPor favor, pasar por recepción. ¡Gracias!`;
 }
 
+// "Enviar factura" (27/10/2026, pedido explicito): solo para el
+// workspace de Pablo -- un comprobante de pago, no un recordatorio de
+// atraso. Mismo formato "carta" que buildOverdueFeeMessage, sin emoji.
+export function buildInvoiceMessage(studentName: string, fee: number | null, dueDate: string): string {
+  const feeLine = fee !== null ? `Monto: ${formatMoney(fee)}\n` : "";
+  return `Comprobante de pago\n\nCliente: ${studentName}\n${feeLine}Vigencia hasta: ${formatShortDate(dueDate)}\n\n¡Gracias por su pago!`;
+}
+
 export function formatDateTime(value: string): string {
   return new Date(value).toLocaleString("es-UY", { dateStyle: "short", timeStyle: "short" });
 }

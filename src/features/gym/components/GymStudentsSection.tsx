@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import {
   addMonths,
+  buildInvoiceMessage,
   buildOverdueFeeMessage,
   buildWhatsAppLink,
   formatMoney,
@@ -37,6 +38,9 @@ type GymStudentsSectionProps = {
   onUpdate: (studentId: string, student: GymStudentInput) => void;
   onRenew: (studentId: string) => void;
   onDelete: (studentId: string) => void;
+  // "Enviar factura" (27/10/2026, pedido explicito): solo en el
+  // workspace de Pablo, no en el de Ale.
+  showInvoiceButton?: boolean;
 };
 
 type StatusFilter = "all" | StudentStatus;
@@ -80,7 +84,7 @@ function emptyForm(): FormState {
   };
 }
 
-export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDelete }: GymStudentsSectionProps) {
+export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDelete, showInvoiceButton = false }: GymStudentsSectionProps) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
@@ -412,6 +416,16 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
                       rel="noreferrer"
                     >
                       WhatsApp
+                    </a>
+                  ) : null}
+                  {showInvoiceButton && student.phone ? (
+                    <a
+                      className="gym-whatsapp-button gym-invoice-button"
+                      href={buildWhatsAppLink(student.phone, buildInvoiceMessage(student.name, student.fee, student.dueDate))}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Enviar factura
                     </a>
                   ) : null}
                 </div>

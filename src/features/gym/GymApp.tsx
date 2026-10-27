@@ -50,6 +50,7 @@ export function GymApp() {
   return (
     <GymHomePage
       userName={session.user.fullName ?? session.user.username}
+      workspaceKey={session.user.workspaceKey}
       onLogout={handleLogout}
       onSessionExpired={handleSessionExpired}
     />

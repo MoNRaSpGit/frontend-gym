@@ -768,6 +768,16 @@ button {
   background: #1ebe59;
 }
 
+/* "Enviar factura" (27/10/2026, solo workspace Pablo): mismo botón de
+   WhatsApp, color azul aparte para distinguirlo del recordatorio verde. */
+.gym-invoice-button {
+  background: #2f6fed;
+}
+
+.gym-invoice-button:hover {
+  background: #255bc4;
+}
+
 .gym-due-pill--red {
   color: var(--color-danger);
   background: color-mix(in srgb, var(--color-danger) 18%, transparent);

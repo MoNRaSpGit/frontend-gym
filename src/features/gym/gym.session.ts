@@ -10,6 +10,10 @@ export type GymSessionUser = {
   id: number;
   username: string;
   fullName: string | null;
+  // Ya viene en la respuesta del login (back lo manda hace rato); se
+  // agrega aca para poder mostrar funcionalidad distinta segun el
+  // workspace (27/10/2026, pedido explicito: factura solo para Pablo).
+  workspaceKey: string;
 };
 
 export type GymSession = {
