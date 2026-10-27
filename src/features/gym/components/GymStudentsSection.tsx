@@ -13,6 +13,7 @@ import {
   type StudentStatus
 } from "../gym.shared";
 import {
+  GYM_CATEGORIES_BY_WORKSPACE,
   GYM_STUDENT_CATEGORY_ICONS,
   GYM_STUDENT_CATEGORY_LABELS,
   GYM_STUDENT_PLAN_LABELS,
@@ -38,9 +39,10 @@ type GymStudentsSectionProps = {
   onUpdate: (studentId: string, student: GymStudentInput) => void;
   onRenew: (studentId: string) => void;
   onDelete: (studentId: string) => void;
-  // "Enviar factura" (27/10/2026, pedido explicito): solo en el
-  // workspace de Pablo, no en el de Ale.
-  showInvoiceButton?: boolean;
+  // Workspace de quien inicio sesion (alegym/pablom): de aca sale tanto
+  // si se muestra "Enviar factura" como que categorias se ofrecen
+  // (27/10/2026, pedido explicito -- cada uno tiene las suyas).
+  workspaceKey: string;
 };
 
 type StatusFilter = "all" | StudentStatus;
@@ -84,7 +86,10 @@ function emptyForm(): FormState {
   };
 }
 
-export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDelete, showInvoiceButton = false }: GymStudentsSectionProps) {
+export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDelete, workspaceKey }: GymStudentsSectionProps) {
+  const showInvoiceButton = workspaceKey === "pablom";
+  const availableCategories =
+    GYM_CATEGORIES_BY_WORKSPACE[workspaceKey] ?? (Object.keys(GYM_STUDENT_CATEGORY_LABELS) as GymStudentCategory[]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
@@ -108,6 +113,9 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
       musculacion: 0,
       musculacion_funcional: 0,
       zumba: 0,
+      aparato: 0,
+      kickboxing: 0,
+      recuperacion: 0,
       otro: 0
     };
     for (const student of students) result[student.category ?? "otro"] += 1;
@@ -274,7 +282,7 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
                 value={form.category}
                 onChange={(event) => updateForm("category", event.target.value as GymStudentCategory)}
               >
-                {(Object.keys(GYM_STUDENT_CATEGORY_LABELS) as GymStudentCategory[]).map((category) => (
+                {availableCategories.map((category) => (
                   <option key={category} value={category}>
                     {GYM_STUDENT_CATEGORY_ICONS[category]} {GYM_STUDENT_CATEGORY_LABELS[category]}
                   </option>
@@ -360,7 +368,7 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
         >
           Todas las categorías <strong>{students.length}</strong>
         </button>
-        {(Object.keys(GYM_STUDENT_CATEGORY_LABELS) as GymStudentCategory[]).map((category) => (
+        {availableCategories.map((category) => (
           <button
             key={category}
             type="button"

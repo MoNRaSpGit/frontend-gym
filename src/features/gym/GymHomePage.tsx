@@ -462,7 +462,7 @@ export function GymHomePage({ userName, workspaceKey, onLogout, onSessionExpired
             onUpdate={handleUpdateStudent}
             onRenew={handleRenewStudent}
             onDelete={handleDeleteStudent}
-            showInvoiceButton={workspaceKey === "pablom"}
+            workspaceKey={workspaceKey}
           />
         ) : null}
         {tab === "progreso" ? (

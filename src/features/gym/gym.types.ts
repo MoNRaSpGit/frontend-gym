@@ -32,7 +32,20 @@ export type GymStudentPlan = "mensual" | "trimestral" | "semestral" | "anual";
 // "musculacion_funcional" (10/10/2026, pedido explicito): categoria
 // combinada aparte, no reemplaza a "musculacion" ni a "funcional" por
 // separado -- quedan las tres como opciones distintas.
-export type GymStudentCategory = "preparacion_deportiva" | "funcional" | "musculacion" | "musculacion_funcional" | "zumba" | "otro";
+// aparato/kickboxing/recuperacion (27/10/2026, pedido explicito): propias
+// del workspace de Pablo, que tiene otro rubro -- ver
+// GYM_CATEGORIES_BY_WORKSPACE, que es lo que filtra cuales se ofrecen en
+// cada workspace (las de Ale no se tocan).
+export type GymStudentCategory =
+  | "preparacion_deportiva"
+  | "funcional"
+  | "musculacion"
+  | "musculacion_funcional"
+  | "zumba"
+  | "aparato"
+  | "kickboxing"
+  | "recuperacion"
+  | "otro";
 
 export type GymStudent = {
   id: string;
@@ -144,6 +157,9 @@ export const GYM_STUDENT_CATEGORY_LABELS: Record<GymStudentCategory, string> = {
   musculacion: "Musculación",
   musculacion_funcional: "Musculación y Funcional",
   zumba: "Zumba",
+  aparato: "Aparato",
+  kickboxing: "Kickboxing",
+  recuperacion: "Recuperación",
   otro: "Otro"
 };
 
@@ -153,7 +169,19 @@ export const GYM_STUDENT_CATEGORY_ICONS: Record<GymStudentCategory, string> = {
   musculacion: "💪",
   musculacion_funcional: "🏋️",
   zumba: "💃",
+  aparato: "🦾",
+  kickboxing: "🥊",
+  recuperacion: "🧘",
   otro: "🏷️"
+};
+
+// Que categorias se ofrecen para elegir en cada workspace (27/10/2026,
+// pedido explicito): Ale sigue con las de siempre, Pablo con las suyas.
+// "otro" queda disponible en los dos. Un workspace que no este en este
+// mapa (ninguno hoy) ve todas -- ver su uso en GymStudentsSection.tsx.
+export const GYM_CATEGORIES_BY_WORKSPACE: Record<string, GymStudentCategory[]> = {
+  alegym: ["preparacion_deportiva", "funcional", "musculacion", "musculacion_funcional", "zumba", "otro"],
+  pablom: ["aparato", "kickboxing", "recuperacion", "otro"]
 };
 
 export const GYM_STUDENT_PLAN_LABELS: Record<GymStudentPlan, string> = {
