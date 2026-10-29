@@ -451,15 +451,6 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
                       WhatsApp
                     </a>
                   ) : null}
-                  {showInvoiceButton && student.phone ? (
-                    <button
-                      type="button"
-                      className="gym-whatsapp-button gym-invoice-button"
-                      onClick={() => handleSendInvoice(student)}
-                    >
-                      Enviar factura
-                    </button>
-                  ) : null}
                 </div>
 
                 <div className="gym-student-actions">
@@ -508,6 +499,15 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
                       >
                         Renovar
                       </button>
+                      {showInvoiceButton && student.phone ? (
+                        <button
+                          type="button"
+                          className="gym-whatsapp-button gym-invoice-button"
+                          onClick={() => handleSendInvoice(student)}
+                        >
+                          Enviar factura
+                        </button>
+                      ) : null}
                       <button type="button" className="gym-ghost-button" onClick={() => openEdit(student)}>
                         Editar
                       </button>
