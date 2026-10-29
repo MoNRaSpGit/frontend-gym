@@ -12,6 +12,7 @@ import {
   getTodayDate,
   type StudentStatus
 } from "../gym.shared";
+import { currentMonthEs, downloadReceiptImage } from "../gym.receipt";
 import {
   GYM_CATEGORIES_BY_WORKSPACE,
   GYM_STUDENT_CATEGORY_ICONS,
@@ -99,6 +100,30 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
   const [filter, setFilter] = useState<StatusFilter>("all");
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
   const [confirming, setConfirming] = useState<{ id: string; action: "renew" | "delete" } | null>(null);
+
+  // "Enviar factura" (28/10/2026, pedido explicito de Pablo): ademas del
+  // texto de siempre, se descarga el comprobante con el logo del gym, el
+  // nombre del cliente, el mes y el vencimiento -- WhatsApp no deja
+  // precargar una imagen en el link, asi que se adjunta a mano despues de
+  // que se abre el chat.
+  async function handleSendInvoice(student: GymStudent) {
+    try {
+      await downloadReceiptImage({
+        gymName: "ANIMAL GYM",
+        logoUrl: `${import.meta.env.BASE_URL}animal-gym-logo.png`,
+        studentName: student.name,
+        month: currentMonthEs(),
+        dueDate: student.dueDate
+      });
+    } catch (err) {
+      console.error("No se pudo generar el comprobante:", err);
+    }
+    window.open(
+      buildWhatsAppLink(student.phone, buildInvoiceMessage(student.name, student.fee, student.dueDate)),
+      "_blank",
+      "noopener,noreferrer"
+    );
+  }
 
   const counts = useMemo(() => {
     const result: Record<StudentStatus, number> = { green: 0, yellow: 0, red: 0 };
@@ -427,14 +452,13 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
                     </a>
                   ) : null}
                   {showInvoiceButton && student.phone ? (
-                    <a
+                    <button
+                      type="button"
                       className="gym-whatsapp-button gym-invoice-button"
-                      href={buildWhatsAppLink(student.phone, buildInvoiceMessage(student.name, student.fee, student.dueDate))}
-                      target="_blank"
-                      rel="noreferrer"
+                      onClick={() => handleSendInvoice(student)}
                     >
                       Enviar factura
-                    </a>
+                    </button>
                   ) : null}
                 </div>
 
