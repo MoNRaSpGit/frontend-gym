@@ -87,7 +87,14 @@ function emptyForm(): FormState {
 }
 
 export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDelete, workspaceKey }: GymStudentsSectionProps) {
-  const showInvoiceButton = workspaceKey === "pablom";
+  // "Enviar factura" (28/10/2026 para Pablo, 29/10/2026 sumado Ale): cada
+  // workspace tiene su propio nombre/formato de comprobante -- Ale todavia
+  // no tiene logo, asi que por ahora va con el nombre en texto nomas.
+  const showInvoiceButton = workspaceKey === "pablom" || workspaceKey === "alegym";
+  const invoiceConfig =
+    workspaceKey === "pablom"
+      ? { gymName: "ANIMAL GYM", logoUrl: `${import.meta.env.BASE_URL}animal-gym-logo.png`, style: "card" as const }
+      : { gymName: "GYM TAIKE", logoUrl: undefined, style: "ticket" as const };
   const availableCategories =
     GYM_CATEGORIES_BY_WORKSPACE[workspaceKey] ?? (Object.keys(GYM_STUDENT_CATEGORY_LABELS) as GymStudentCategory[]);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -100,16 +107,17 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
   const [confirming, setConfirming] = useState<{ id: string; action: "renew" | "delete" } | null>(null);
 
-  // "Enviar factura" (28/10/2026, pedido explicito de Pablo): se descarga
-  // el comprobante con el logo del gym, el nombre del cliente, el mes y
-  // el vencimiento, y se abre el chat VACIO (sin texto precargado) --
-  // WhatsApp no deja precargar una imagen en el link, asi que se adjunta
-  // a mano el comprobante recien descargado.
+  // "Enviar factura" (28/10/2026, pedido explicito de Pablo; 29/10/2026
+  // sumado Ale con su propio formato): se descarga el comprobante segun
+  // invoiceConfig del workspace, y se abre el chat VACIO (sin texto
+  // precargado) -- WhatsApp no deja precargar una imagen en el link, asi
+  // que se adjunta a mano el comprobante recien descargado.
   async function handleSendInvoice(student: GymStudent) {
     try {
       await downloadReceiptImage({
-        gymName: "ANIMAL GYM",
-        logoUrl: `${import.meta.env.BASE_URL}animal-gym-logo.png`,
+        gymName: invoiceConfig.gymName,
+        logoUrl: invoiceConfig.logoUrl,
+        style: invoiceConfig.style,
         studentName: student.name,
         month: currentMonthEs(),
         dueDate: student.dueDate
