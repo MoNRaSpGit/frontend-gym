@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import {
   addMonths,
-  buildInvoiceMessage,
   buildOverdueFeeMessage,
   buildWhatsAppLink,
   formatMoney,
@@ -101,11 +100,11 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
   const [confirming, setConfirming] = useState<{ id: string; action: "renew" | "delete" } | null>(null);
 
-  // "Enviar factura" (28/10/2026, pedido explicito de Pablo): ademas del
-  // texto de siempre, se descarga el comprobante con el logo del gym, el
-  // nombre del cliente, el mes y el vencimiento -- WhatsApp no deja
-  // precargar una imagen en el link, asi que se adjunta a mano despues de
-  // que se abre el chat.
+  // "Enviar factura" (28/10/2026, pedido explicito de Pablo): se descarga
+  // el comprobante con el logo del gym, el nombre del cliente, el mes y
+  // el vencimiento, y se abre el chat VACIO (sin texto precargado) --
+  // WhatsApp no deja precargar una imagen en el link, asi que se adjunta
+  // a mano el comprobante recien descargado.
   async function handleSendInvoice(student: GymStudent) {
     try {
       await downloadReceiptImage({
@@ -118,11 +117,7 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
     } catch (err) {
       console.error("No se pudo generar el comprobante:", err);
     }
-    window.open(
-      buildWhatsAppLink(student.phone, buildInvoiceMessage(student.name, student.fee, student.dueDate)),
-      "_blank",
-      "noopener,noreferrer"
-    );
+    window.open(buildWhatsAppLink(student.phone), "_blank", "noopener,noreferrer");
   }
 
   const counts = useMemo(() => {

@@ -34,12 +34,16 @@ const WHATSAPP_TESTING_OVERRIDE_PHONE: string | null = null;
 // es un simple wa.me con texto precargado, no manda nada solo. Numeros
 // uruguayos se escriben con el 0 inicial (ej: "092 945 696"); wa.me
 // necesita el numero completo con codigo de pais (598) y sin ese 0.
-export function buildWhatsAppLink(phone: string, message: string): string {
+// Sin mensaje (28/10/2026, caso "Enviar factura"): abre el chat vacio,
+// nada precargado -- ahi se adjunta a mano el comprobante descargado.
+export function buildWhatsAppLink(phone: string, message?: string): string {
   const targetPhone = WHATSAPP_TESTING_OVERRIDE_PHONE ?? phone;
   const digits = targetPhone.replace(/\D/g, "");
   const withoutLeadingZero = digits.startsWith("0") ? digits.slice(1) : digits;
   const withCountryCode = withoutLeadingZero.startsWith("598") ? withoutLeadingZero : `598${withoutLeadingZero}`;
-  return `https://wa.me/${withCountryCode}?text=${encodeURIComponent(message)}`;
+  return message
+    ? `https://wa.me/${withCountryCode}?text=${encodeURIComponent(message)}`
+    : `https://wa.me/${withCountryCode}`;
 }
 
 // Formato "carta" (09/10/2026, pedido explicito): encabezado con el
