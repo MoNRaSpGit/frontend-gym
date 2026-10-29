@@ -83,13 +83,20 @@ export async function buildReceiptImageBlob(input: ReceiptInput): Promise<Blob> 
   ctx.font = "800 52px system-ui, Arial, sans-serif";
   ctx.fillText(input.studentName, 56, 585);
 
-  // MES
+  // MES (28/10/2026, fix: meses largos como "SEPTIEMBRE" se salian del
+  // cuadro con el tamaño fijo -- ahora la letra se achica hasta entrar).
   ctx.textAlign = "center";
   ctx.fillStyle = "#e8e8e8";
   ctx.font = "700 30px system-ui, Arial, sans-serif";
   ctx.fillText("MES", W / 2, 660);
   ctx.fillStyle = "#ffffff";
-  ctx.font = "900 150px Arial, sans-serif";
+  const maxMonthWidth = W - 72;
+  let monthSize = 150;
+  ctx.font = `900 ${monthSize}px Arial, sans-serif`;
+  while (ctx.measureText(input.month).width > maxMonthWidth && monthSize > 60) {
+    monthSize -= 4;
+    ctx.font = `900 ${monthSize}px Arial, sans-serif`;
+  }
   ctx.fillText(input.month, W / 2, 815);
 
   // Linea roja
