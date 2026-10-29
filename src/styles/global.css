@@ -780,6 +780,13 @@ button {
   background: #255bc4;
 }
 
+/* "No se envió factura" en Resumen (29/10/2026): aviso discreto junto a
+   la nota del movimiento, para poder mandarla despues sin perder el dato. */
+.gym-invoice-pending {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
 .gym-due-pill--red {
   color: var(--color-danger);
   background: color-mix(in srgb, var(--color-danger) 18%, transparent);

@@ -21,6 +21,12 @@ export type GymMovement = {
   amount: number | null;
   note: string;
   createdAt: string;
+  // Solo para "cobro" en workspaces con factura (29/10/2026, pedido
+  // explicito): si al renovar se contesto "no" a enviar factura, queda
+  // registrado aca para poder mandarla despues desde Resumen, sin
+  // perderse el dato de "a este no le mande nada todavia".
+  studentId?: string;
+  invoiceSent?: boolean;
 };
 
 export type GymStudentPlan = "mensual" | "trimestral" | "semestral" | "anual";

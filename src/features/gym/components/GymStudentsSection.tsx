@@ -11,7 +11,7 @@ import {
   getTodayDate,
   type StudentStatus
 } from "../gym.shared";
-import { currentMonthEs, downloadReceiptImage } from "../gym.receipt";
+import { getInvoiceConfig, sendInvoiceForStudent } from "../gym.invoice";
 import {
   GYM_CATEGORIES_BY_WORKSPACE,
   GYM_STUDENT_CATEGORY_ICONS,
@@ -37,7 +37,7 @@ type GymStudentsSectionProps = {
   students: GymStudent[];
   onCreate: (student: GymStudentInput, paidNow: boolean) => void;
   onUpdate: (studentId: string, student: GymStudentInput) => void;
-  onRenew: (studentId: string) => void;
+  onRenew: (studentId: string, sendInvoice: boolean) => void;
   onDelete: (studentId: string) => void;
   // Workspace de quien inicio sesion (alegym/pablom): de aca sale tanto
   // si se muestra "Enviar factura" como que categorias se ofrecen
@@ -87,14 +87,10 @@ function emptyForm(): FormState {
 }
 
 export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDelete, workspaceKey }: GymStudentsSectionProps) {
-  // "Enviar factura" (28/10/2026 para Pablo, 29/10/2026 sumado Ale): cada
-  // workspace tiene su propio nombre/formato de comprobante -- Ale todavia
-  // no tiene logo, asi que por ahora va con el nombre en texto nomas.
-  const showInvoiceButton = workspaceKey === "pablom" || workspaceKey === "alegym";
-  const invoiceConfig =
-    workspaceKey === "pablom"
-      ? { gymName: "ANIMAL GYM", logoUrl: `${import.meta.env.BASE_URL}animal-gym-logo.png`, style: "card" as const }
-      : { gymName: "GYM TAIKE", logoUrl: undefined, style: "ticket" as const };
+  // "Enviar factura" (28/10/2026 Pablo, 29/10/2026 Ale): ya no es un
+  // boton aparte (apretaba mucho en celular) -- ahora se pregunta al
+  // renovar, ver el flujo de "confirming" mas abajo.
+  const showInvoiceButton = getInvoiceConfig(workspaceKey) !== null;
   const availableCategories =
     GYM_CATEGORIES_BY_WORKSPACE[workspaceKey] ?? (Object.keys(GYM_STUDENT_CATEGORY_LABELS) as GymStudentCategory[]);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -105,27 +101,19 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<StatusFilter>("all");
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
-  const [confirming, setConfirming] = useState<{ id: string; action: "renew" | "delete" } | null>(null);
+  // "renew" = ¿renovar?, "renew-invoice" = (solo si showInvoiceButton)
+  // paso siguiente, ¿enviar factura?, "delete" = ¿borrar?
+  const [confirming, setConfirming] = useState<{ id: string; action: "renew" | "renew-invoice" | "delete" } | null>(
+    null
+  );
 
-  // "Enviar factura" (28/10/2026, pedido explicito de Pablo; 29/10/2026
-  // sumado Ale con su propio formato): se descarga el comprobante segun
-  // invoiceConfig del workspace, y se abre el chat VACIO (sin texto
-  // precargado) -- WhatsApp no deja precargar una imagen en el link, asi
-  // que se adjunta a mano el comprobante recien descargado.
-  async function handleSendInvoice(student: GymStudent) {
-    try {
-      await downloadReceiptImage({
-        gymName: invoiceConfig.gymName,
-        logoUrl: invoiceConfig.logoUrl,
-        style: invoiceConfig.style,
-        studentName: student.name,
-        month: currentMonthEs(),
-        dueDate: student.dueDate
-      });
-    } catch (err) {
-      console.error("No se pudo generar el comprobante:", err);
+  function finishRenew(studentId: string, sendInvoice: boolean) {
+    onRenew(studentId, sendInvoice);
+    if (sendInvoice) {
+      const student = students.find((item) => item.id === studentId);
+      if (student?.phone) void sendInvoiceForStudent(student, workspaceKey);
     }
-    window.open(buildWhatsAppLink(student.phone), "_blank", "noopener,noreferrer");
+    setConfirming(null);
   }
 
   const counts = useMemo(() => {
@@ -422,6 +410,7 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
             const status = getStudentStatus(student.dueDate);
             const daysLeft = getDaysUntilDue(student.dueDate);
             const isConfirmingRenew = confirming?.id === student.id && confirming.action === "renew";
+            const isConfirmingInvoice = confirming?.id === student.id && confirming.action === "renew-invoice";
             const isConfirmingDelete = confirming?.id === student.id && confirming.action === "delete";
 
             return (
@@ -466,13 +455,30 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
                         type="button"
                         className="gym-primary-button gym-primary-button--small"
                         onClick={() => {
-                          onRenew(student.id);
-                          setConfirming(null);
+                          if (showInvoiceButton) {
+                            setConfirming({ id: student.id, action: "renew-invoice" });
+                          } else {
+                            finishRenew(student.id, false);
+                          }
                         }}
                       >
                         Confirmar
                       </button>
                       <button type="button" className="gym-ghost-button" onClick={() => setConfirming(null)}>
+                        No
+                      </button>
+                    </div>
+                  ) : isConfirmingInvoice ? (
+                    <div className="gym-confirm">
+                      <span>¿Desea enviar factura?</span>
+                      <button
+                        type="button"
+                        className="gym-primary-button gym-primary-button--small"
+                        onClick={() => finishRenew(student.id, true)}
+                      >
+                        Sí
+                      </button>
+                      <button type="button" className="gym-ghost-button" onClick={() => finishRenew(student.id, false)}>
                         No
                       </button>
                     </div>
@@ -502,15 +508,6 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
                       >
                         Renovar
                       </button>
-                      {showInvoiceButton && student.phone ? (
-                        <button
-                          type="button"
-                          className="gym-whatsapp-button gym-invoice-button"
-                          onClick={() => handleSendInvoice(student)}
-                        >
-                          Enviar factura
-                        </button>
-                      ) : null}
                       <button type="button" className="gym-ghost-button" onClick={() => openEdit(student)}>
                         Editar
                       </button>

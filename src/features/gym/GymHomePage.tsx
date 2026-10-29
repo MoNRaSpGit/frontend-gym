@@ -270,6 +270,14 @@ export function GymHomePage({ userName, workspaceKey, onLogout, onSessionExpired
     }));
   }
 
+  // Reenviar desde Resumen cuando en su momento se contesto "no" (29/10/2026).
+  function handleMarkInvoiceSent(movementId: string) {
+    setData((current) => ({
+      ...current,
+      movements: current.movements.map((item) => (item.id === movementId ? { ...item, invoiceSent: true } : item))
+    }));
+  }
+
   function handleCreateStudent(input: GymStudentInput, paidNow: boolean) {
     const now = new Date().toISOString();
     const today = getTodayDate();
@@ -318,7 +326,12 @@ export function GymHomePage({ userName, workspaceKey, onLogout, onSessionExpired
     toast.success("Cambios guardados.");
   }
 
-  function handleRenewStudent(studentId: string) {
+  // "sendInvoice" (29/10/2026, pedido explicito): al renovar se pregunta
+  // si se quiere enviar la factura. Si se dice que no, el movimiento
+  // queda marcado invoiceSent:false para poder mandarla despues desde
+  // Resumen (handleMarkInvoiceSent), sin perder el registro de que a ese
+  // cliente todavia no se le mando nada.
+  function handleRenewStudent(studentId: string, sendInvoice: boolean) {
     const student = data.students.find((item) => item.id === studentId);
     if (!student) return;
     const today = getTodayDate();
@@ -329,7 +342,9 @@ export function GymHomePage({ userName, workspaceKey, onLogout, onSessionExpired
       type: "cobro",
       amount: student.fee,
       note: `Cuota: ${student.name}`,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      studentId: student.id,
+      invoiceSent: sendInvoice
     };
 
     setData((current) => ({
@@ -488,7 +503,10 @@ export function GymHomePage({ userName, workspaceKey, onLogout, onSessionExpired
         {tab === "resumen" ? (
           <GymSummarySection
             movements={data.movements}
+            students={data.students}
+            workspaceKey={workspaceKey}
             onDelete={handleDeleteMovement}
+            onMarkInvoiceSent={handleMarkInvoiceSent}
             selectedMonth={selectedMonth}
             onSelectMonth={setSelectedMonth}
           />

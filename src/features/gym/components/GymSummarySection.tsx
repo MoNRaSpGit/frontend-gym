@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { GraficoResumenMensual, type GymMonthHistoryItem } from "./GraficoResumenMensual";
 import { formatDateTime, formatMoney, getTodayDate, getYearMonth } from "../gym.shared";
-import { GYM_MOVEMENT_TYPE_LABELS, type GymMovement } from "../gym.types";
+import { GYM_MOVEMENT_TYPE_LABELS, type GymMovement, type GymStudent } from "../gym.types";
+import { getInvoiceConfig, sendInvoiceForStudent } from "../gym.invoice";
 
 function daysInMonth(monthKey: string) {
   const [anio, mes] = monthKey.split("-").map(Number);
@@ -10,7 +11,12 @@ function daysInMonth(monthKey: string) {
 
 type GymSummarySectionProps = {
   movements: GymMovement[];
+  students: GymStudent[];
+  workspaceKey: string;
   onDelete: (movementId: string) => void;
+  // Reenviar la factura de una cuota ya cobrada cuando en su momento se
+  // contesto "no" al renovar (29/10/2026, pedido explicito).
+  onMarkInvoiceSent: (movementId: string) => void;
   // Mes compartido con Gastos (09/10/2026, pedido explicito) -- vive en
   // GymHomePage, no aca adentro.
   selectedMonth: string;
@@ -46,7 +52,25 @@ function movementColorClass(type: GymMovement["type"]) {
   return "";
 }
 
-export function GymSummarySection({ movements, onDelete, selectedMonth, onSelectMonth }: GymSummarySectionProps) {
+export function GymSummarySection({
+  movements,
+  students,
+  workspaceKey,
+  onDelete,
+  onMarkInvoiceSent,
+  selectedMonth,
+  onSelectMonth
+}: GymSummarySectionProps) {
+  const invoiceEnabled = getInvoiceConfig(workspaceKey) !== null;
+  const studentsById = useMemo(() => new Map(students.map((student) => [student.id, student])), [students]);
+
+  function handleResendInvoice(movement: GymMovement) {
+    const student = movement.studentId ? studentsById.get(movement.studentId) : undefined;
+    if (!student?.phone) return;
+    void sendInvoiceForStudent(student, workspaceKey);
+    onMarkInvoiceSent(movement.id);
+  }
+
   const monthMovements = useMemo(
     () => movements.filter((movement) => getYearMonth(movement.date) === selectedMonth),
     [movements, selectedMonth]
@@ -219,17 +243,36 @@ export function GymSummarySection({ movements, onDelete, selectedMonth, onSelect
         {visibleMovements.length === 0 ? (
           <p className="gym-hint">No hay movimientos en {formatMonthLabel(selectedMonth).toLowerCase()}.</p>
         ) : (
-          visibleMovements.map((movement) => (
-            <div key={movement.id} className={`gym-movement-row ${movementColorClass(movement.type)}`}>
-              <span className="gym-badge">{GYM_MOVEMENT_TYPE_LABELS[movement.type]}</span>
-              <span>{movement.amount !== null ? formatMoney(movement.amount) : "-"}</span>
-              <span className="gym-hint">{movement.note || "-"}</span>
-              <span className="gym-hint">{formatDateTime(movement.createdAt)}</span>
-              <button type="button" className="gym-ghost-button gym-ghost-button--danger" onClick={() => onDelete(movement.id)}>
-                Borrar
-              </button>
-            </div>
-          ))
+          visibleMovements.map((movement) => {
+            // "No se envio factura" (29/10/2026, pedido explicito): solo
+            // para cuotas de un workspace con factura donde en su momento
+            // se contesto "no" -- da la posibilidad de mandarla despues.
+            const pendingInvoice = invoiceEnabled && movement.type === "cobro" && movement.invoiceSent === false;
+            const invoiceStudent = movement.studentId ? studentsById.get(movement.studentId) : undefined;
+            return (
+              <div key={movement.id} className={`gym-movement-row ${movementColorClass(movement.type)}`}>
+                <span className="gym-badge">{GYM_MOVEMENT_TYPE_LABELS[movement.type]}</span>
+                <span>{movement.amount !== null ? formatMoney(movement.amount) : "-"}</span>
+                <span className="gym-hint">
+                  {movement.note || "-"}
+                  {pendingInvoice ? <span className="gym-invoice-pending"> · No se envió factura</span> : null}
+                </span>
+                <span className="gym-hint">{formatDateTime(movement.createdAt)}</span>
+                {pendingInvoice && invoiceStudent?.phone ? (
+                  <button
+                    type="button"
+                    className="gym-whatsapp-button gym-invoice-button"
+                    onClick={() => handleResendInvoice(movement)}
+                  >
+                    Enviar factura
+                  </button>
+                ) : null}
+                <button type="button" className="gym-ghost-button gym-ghost-button--danger" onClick={() => onDelete(movement.id)}>
+                  Borrar
+                </button>
+              </div>
+            );
+          })
         )}
       </div>
 
