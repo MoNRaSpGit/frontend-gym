@@ -54,55 +54,83 @@ type ReceiptInput = {
   studentName: string;
   month: string;
   dueDate: string;
-  style?: "card" | "ticket";
+  style?: "card" | "card-light" | "ticket";
+};
+
+type CardTheme = {
+  background: string;
+  label: string;
+  text: string;
+  check: string;
+  accent: string;
+  // "circle": logo redondo recortado (Animal Gym). "framed": logo
+  // rectangular con fondo blanco propio, se dibuja entero con su
+  // proporcion (Equilibrio Gym).
+  logoShape: "circle" | "framed";
+};
+
+const CARD_THEMES: Record<"card" | "card-light", CardTheme> = {
+  card: { background: "#0a0a0a", label: "#e8e8e8", text: "#ffffff", check: "#4fd07a", accent: "#c0392b", logoShape: "circle" },
+  "card-light": { background: "#ffffff", label: "#5b5f58", text: "#141414", check: "#4f9a2b", accent: "#4f9a2b", logoShape: "framed" }
 };
 
 // Formato "card" (Animal Gym / Pablo): fondo negro, logo circular, acento
-// verde/rojo.
-async function buildCardReceipt(ctx: CanvasRenderingContext2D, W: number, input: ReceiptInput) {
-  ctx.fillStyle = "#0a0a0a";
+// verde/rojo. Formato "card-light" (30/10/2026, Ale / Equilibrio Gym):
+// el mismo comprobante pero en blanco con acento verde, para que el logo
+// (que viene con fondo blanco) quede integrado y no como un recuadro.
+async function buildCardReceipt(ctx: CanvasRenderingContext2D, W: number, input: ReceiptInput, theme: CardTheme) {
+  ctx.fillStyle = theme.background;
   ctx.fillRect(0, 0, W, 1180);
 
   if (input.logoUrl) {
     try {
       const logo = await loadImage(input.logoUrl);
-      const cx = W / 2;
-      const cy = 190;
-      const r = 130;
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(cx, cy, r, 0, Math.PI * 2);
-      ctx.closePath();
-      ctx.clip();
-      ctx.drawImage(logo, cx - r, cy - r, r * 2, r * 2);
-      ctx.restore();
+      if (theme.logoShape === "circle") {
+        const cx = W / 2;
+        const cy = 190;
+        const r = 130;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(logo, cx - r, cy - r, r * 2, r * 2);
+        ctx.restore();
+      } else {
+        const maxW = 440;
+        const maxH = 330;
+        const scale = Math.min(maxW / logo.width, maxH / logo.height);
+        const w = logo.width * scale;
+        const h = logo.height * scale;
+        ctx.drawImage(logo, (W - w) / 2, 26 + (maxH - h) / 2, w, h);
+      }
     } catch {
       // Si el logo no carga, el comprobante sigue sin el (no se bloquea).
     }
   }
 
   ctx.textAlign = "center";
-  ctx.fillStyle = "#4fd07a";
+  ctx.fillStyle = theme.check;
   ctx.font = "900 62px system-ui, Arial, sans-serif";
   ctx.fillText("✓ PAGADO", W / 2, 440);
 
   ctx.textAlign = "left";
-  ctx.fillStyle = "#e8e8e8";
+  ctx.fillStyle = theme.label;
   ctx.font = "600 32px system-ui, Arial, sans-serif";
   ctx.fillText("Cliente:", 56, 520);
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = theme.text;
   ctx.font = "800 52px system-ui, Arial, sans-serif";
   ctx.fillText(input.studentName, 56, 585);
 
   ctx.textAlign = "center";
-  ctx.fillStyle = "#e8e8e8";
+  ctx.fillStyle = theme.label;
   ctx.font = "700 30px system-ui, Arial, sans-serif";
   ctx.fillText("MES", W / 2, 660);
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = theme.text;
   fitFontSize(ctx, input.month, W - 72, 150, 60, 900, "Arial, sans-serif");
   ctx.fillText(input.month, W / 2, 815);
 
-  ctx.strokeStyle = "#c0392b";
+  ctx.strokeStyle = theme.accent;
   ctx.lineWidth = 6;
   ctx.beginPath();
   ctx.moveTo(56, 865);
@@ -110,15 +138,15 @@ async function buildCardReceipt(ctx: CanvasRenderingContext2D, W: number, input:
   ctx.stroke();
 
   ctx.textAlign = "left";
-  ctx.fillStyle = "#e8e8e8";
+  ctx.fillStyle = theme.label;
   ctx.font = "600 30px system-ui, Arial, sans-serif";
   ctx.fillText("Fecha de vencimiento:", 56, 935);
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = theme.text;
   ctx.font = "800 54px system-ui, Arial, sans-serif";
   ctx.fillText(formatShortDateEs(input.dueDate), 56, 1000);
 
   ctx.textAlign = "center";
-  ctx.fillStyle = "#c0392b";
+  ctx.fillStyle = theme.accent;
   ctx.font = "700 24px system-ui, Arial, sans-serif";
   ctx.fillText(`Gracias por confiar en ${input.gymName} · Pago confirmado`, W / 2, 1110);
 }
@@ -257,7 +285,7 @@ export async function buildReceiptImageBlob(input: ReceiptInput): Promise<Blob> 
   if (input.style === "ticket") {
     buildTicketReceipt(ctx, W, input);
   } else {
-    await buildCardReceipt(ctx, W, input);
+    await buildCardReceipt(ctx, W, input, CARD_THEMES[input.style ?? "card"]);
   }
 
   return new Promise((resolve, reject) => {

@@ -8,7 +8,7 @@ import { buildWhatsAppLink } from "./gym.shared";
 export type GymInvoiceConfig = {
   gymName: string;
   logoUrl?: string;
-  style: "card" | "ticket";
+  style: "card" | "card-light" | "ticket";
 };
 
 export function getInvoiceConfig(workspaceKey: string): GymInvoiceConfig | null {
@@ -16,7 +16,9 @@ export function getInvoiceConfig(workspaceKey: string): GymInvoiceConfig | null 
     return { gymName: "ANIMAL GYM", logoUrl: `${import.meta.env.BASE_URL}animal-gym-logo.png`, style: "card" };
   }
   if (workspaceKey === "alegym") {
-    return { gymName: "GYM TAIKE", style: "ticket" };
+    // 30/10/2026: pasa al mismo formato que Pablo, con su logo real (antes
+    // "ticket" sin logo y con el nombre "GYM TAIKE").
+    return { gymName: "EQUILIBRIO GYM", logoUrl: `${import.meta.env.BASE_URL}equilibrio-gym-logo.png`, style: "card-light" };
   }
   return null;
 }
