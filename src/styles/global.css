@@ -842,6 +842,14 @@ button {
       "due due"
       "actions actions";
   }
+  /* 31/10/2026: achicamos los 4 botones de accion (Renovar/Editar/Borrar
+     + WPP cuando aparece) para que entren siempre en una sola fila. */
+  .gym-student-actions > .gym-primary-button--small,
+  .gym-student-actions > .gym-ghost-button,
+  .gym-student-actions > .gym-whatsapp-button {
+    padding: 6px 9px;
+    font-size: 12px;
+  }
   .gym-student-due {
     justify-items: start;
     text-align: left;
