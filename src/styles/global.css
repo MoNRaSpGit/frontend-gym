@@ -771,9 +771,12 @@ button {
 }
 
 /* 31/10/2026: se movio de la fila "vence" (chocaba con el texto en
-   celular) a la fila de acciones, empujado bien a la derecha. */
-.gym-whatsapp-button--corner {
-  margin-left: auto;
+   celular) a la fila de acciones, mismo tamaño que Renovar/Editar/Borrar
+   para que entren los cuatro juntos; texto abreviado "WPP". */
+.gym-whatsapp-button--compact {
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 13px;
 }
 
 /* "Enviar factura" (27/10/2026, solo workspace Pablo): mismo botón de

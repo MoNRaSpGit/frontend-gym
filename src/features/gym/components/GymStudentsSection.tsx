@@ -512,12 +512,13 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
                   )}
                   {status === "red" && student.phone ? (
                     <a
-                      className="gym-whatsapp-button gym-whatsapp-button--corner"
+                      className="gym-whatsapp-button gym-whatsapp-button--compact"
                       href={buildWhatsAppLink(student.phone, buildOverdueFeeMessage(student.name, student.dueDate))}
                       target="_blank"
                       rel="noreferrer"
+                      title="Avisar por WhatsApp"
                     >
-                      WhatsApp
+                      WPP
                     </a>
                   ) : null}
                 </div>
