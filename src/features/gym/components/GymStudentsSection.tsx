@@ -433,16 +433,6 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
                 <div className="gym-student-due">
                   <span className={`gym-due-pill gym-due-pill--${status}`}>vence {formatShortDate(student.dueDate)}</span>
                   <span className="gym-hint">{describeDaysLeft(daysLeft)}</span>
-                  {status === "red" && student.phone ? (
-                    <a
-                      className="gym-whatsapp-button"
-                      href={buildWhatsAppLink(student.phone, buildOverdueFeeMessage(student.name, student.dueDate))}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      WhatsApp
-                    </a>
-                  ) : null}
                 </div>
 
                 <div className="gym-student-actions">
@@ -520,6 +510,16 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
                       </button>
                     </>
                   )}
+                  {status === "red" && student.phone ? (
+                    <a
+                      className="gym-whatsapp-button gym-whatsapp-button--corner"
+                      href={buildWhatsAppLink(student.phone, buildOverdueFeeMessage(student.name, student.dueDate))}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      WhatsApp
+                    </a>
+                  ) : null}
                 </div>
               </div>
             );
