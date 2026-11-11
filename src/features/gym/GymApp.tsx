@@ -38,6 +38,7 @@ export function GymApp() {
   function handleLogout() {
     void logoutGym();
     clearGymSession();
+    setNoticeAccepted(false);
     setSession(null);
   }
 
@@ -51,11 +52,14 @@ export function GymApp() {
   // queda guardado en este navegador y no vuelve a salir.
   const noticeKey = session ? `frontend-gym.service-expired-accepted.${session.user.username.toLowerCase()}` : "";
   const isNoticeUser = session?.user.username.toLowerCase() === "alegym";
-  const showNotice = isNoticeUser && !noticeAccepted && !readNoticeAccepted(noticeKey);
+  // "vistaprevia" es un usuario de prueba para ver el cartel: le sale en
+  // cada ingreso (no se recuerda que lo aceptó).
+  const isPreviewUser = session?.user.username.toLowerCase() === "vistaprevia";
+  const showNotice = !noticeAccepted && (isPreviewUser || (isNoticeUser && !readNoticeAccepted(noticeKey)));
 
   function handleAcceptNotice() {
     try {
-      localStorage.setItem(noticeKey, "1");
+      if (!isPreviewUser) localStorage.setItem(noticeKey, "1");
     } catch {
       // Si el navegador no deja guardar, al menos se cierra en esta visita.
     }
