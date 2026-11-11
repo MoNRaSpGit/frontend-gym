@@ -1323,3 +1323,38 @@ button {
   margin-right: auto;
   align-self: center;
 }
+
+.gym-notice-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.65);
+}
+
+.gym-notice-card {
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-text);
+}
+
+.gym-notice-card h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.gym-notice-card p {
+  margin: 0;
+  color: var(--color-muted);
+  line-height: 1.5;
+}
