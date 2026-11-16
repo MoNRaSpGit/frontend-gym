@@ -1324,37 +1324,57 @@ button {
   align-self: center;
 }
 
-.gym-notice-backdrop {
-  position: fixed;
-  inset: 0;
+/* Aviso de demora: franja amarilla arriba, expandible (11/11/2026). */
+.gym-notice-bar {
+  position: sticky;
+  top: 0;
   z-index: 1000;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-  background: rgba(0, 0, 0, 0.65);
+  align-items: flex-start;
+  gap: 4px;
+  padding: env(safe-area-inset-top) 8px 0 12px;
+  background: #f5c542;
+  color: #2b2100;
+  border-bottom: 2px solid #c99a12;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
-.gym-notice-card {
-  width: 100%;
-  max-width: 380px;
+.gym-notice-main {
+  flex: 1;
+  min-width: 0;
   display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: 22px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  color: var(--color-text);
+  align-items: flex-start;
+  gap: 8px;
+  padding: 9px 0;
+  border: none;
+  background: none;
+  color: inherit;
+  text-align: left;
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
 }
 
-.gym-notice-card h2 {
-  margin: 0;
-  font-size: 1.25rem;
+.gym-notice-icon {
+  flex: none;
+  font-size: 1rem;
+  line-height: 1.3;
 }
 
-.gym-notice-card p {
-  margin: 0;
-  color: var(--color-muted);
-  line-height: 1.5;
+.gym-notice-text {
+  display: grid;
+  gap: 2px;
+  line-height: 1.35;
+}
+
+.gym-notice-close {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: none;
+  color: inherit;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
 }

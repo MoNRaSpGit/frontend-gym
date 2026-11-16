@@ -58,3 +58,13 @@ export async function loginGym(username: string, password: string): Promise<GymS
 export async function logoutGym(): Promise<void> {
   await fetch(buildUrl("/gym/auth/logout"), { method: "POST", headers: authHeaders() }).catch(() => undefined);
 }
+
+// Aviso de demora activado desde Scrum (11/11/2026).
+export async function fetchGymNotice(): Promise<{ active: boolean }> {
+  const response = await fetch(buildUrl("/gym/notice"), { headers: authHeaders() });
+  return readJson<{ active: boolean }>(response);
+}
+
+export async function markGymNoticeSeen(): Promise<void> {
+  await fetch(buildUrl("/gym/notice/seen"), { method: "POST", headers: authHeaders() }).catch(() => undefined);
+}

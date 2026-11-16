@@ -1,19 +1,41 @@
+import { useState } from "react";
+
 interface Props {
-  onAccept: () => void;
+  onClose: () => void;
 }
 
-// Aviso de servicio vencido (11/11/2026, pedido explicito): salta apenas
-// se loguea el cliente alegym y no se cierra hasta que toca "Aceptar".
-export function ServiceExpiredNotice({ onAccept }: Props) {
+// Aviso de demora (11/11/2026, pedido explicito): franja amarilla arriba,
+// chica y poco invasiva. Al tocarla se expande con el mensaje completo; la
+// cruz de arriba a la derecha la cierra (vuelve en el proximo inicio de
+// sesion mientras siga activo en Scrum).
+export function ServiceExpiredNotice({ onClose }: Props) {
+  const [expanded, setExpanded] = useState(false);
+
   return (
-    <div className="gym-notice-backdrop" role="dialog" aria-modal="true" aria-labelledby="gym-notice-title">
-      <div className="gym-notice-card">
-        <h2 id="gym-notice-title">Estimado cliente</h2>
-        <p>Le recordamos que su servicio se encuentra vencido. Por favor, comuníquese con su proveedor.</p>
-        <button type="button" className="gym-primary-button" onClick={onAccept} autoFocus>
-          Aceptar
-        </button>
-      </div>
+    <div className="gym-notice-bar" role="status">
+      <button
+        type="button"
+        className="gym-notice-main"
+        onClick={() => setExpanded((current) => !current)}
+        aria-expanded={expanded}
+      >
+        <span className="gym-notice-icon" aria-hidden="true">
+          ⚠
+        </span>
+        <span className="gym-notice-text">
+          {expanded ? (
+            <>
+              <strong>Estimado cliente</strong>
+              <span>Le recordamos que su servicio se encuentra vencido. Por favor, comuníquese con su proveedor.</span>
+            </>
+          ) : (
+            <strong>Aviso sobre su servicio · tocá para ver más</strong>
+          )}
+        </span>
+      </button>
+      <button type="button" className="gym-notice-close" onClick={onClose} aria-label="Cerrar aviso">
+        ✕
+      </button>
     </div>
   );
 }

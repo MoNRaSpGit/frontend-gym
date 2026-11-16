@@ -1,15 +1,33 @@
-import { useState } from "react";
-import { loginGym, logoutGym } from "./gym.client";
+import { useEffect, useState } from "react";
+import { fetchGymNotice, loginGym, logoutGym, markGymNoticeSeen } from "./gym.client";
 import { GymHomePage } from "./GymHomePage";
 import { GymLoginScreen } from "./components/GymLoginScreen";
 import { ServiceExpiredNotice } from "./components/ServiceExpiredNotice";
 import { clearGymSession, loadGymSession, saveGymSession, type GymSession } from "./gym.session";
 
-function readNoticeAccepted(key: string): boolean {
+// "vistaprevia" es un usuario de prueba para ver el cartel: le sale siempre,
+// sin depender de Scrum.
+const PREVIEW_USERNAME = "vistaprevia";
+
+// Una vez por inicio de sesion: si el cliente cierra el aviso, no vuelve a
+// salir hasta el proximo login (F5 incluido).
+function noticeShownKey(token: string) {
+  return `frontend-gym.notice-shown.${token.slice(-12)}`;
+}
+
+function wasNoticeShown(token: string): boolean {
   try {
-    return localStorage.getItem(key) === "1";
+    return sessionStorage.getItem(noticeShownKey(token)) === "1";
   } catch {
     return false;
+  }
+}
+
+function rememberNoticeShown(token: string) {
+  try {
+    sessionStorage.setItem(noticeShownKey(token), "1");
+  } catch {
+    // Sin sessionStorage: se cierra igual en esta visita.
   }
 }
 
@@ -19,7 +37,35 @@ export function GymApp() {
   const [session, setSession] = useState<GymSession | null>(loadGymSession);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
-  const [noticeAccepted, setNoticeAccepted] = useState(false);
+  const [showNotice, setShowNotice] = useState(false);
+
+  // Aviso de demora (11/11/2026): se activa desde Scrum (Clientes) para el
+  // usuario de este cliente. Al iniciar sesion se pregunta si esta activo
+  // y, si lo esta, salta el cartel hasta que toque Aceptar.
+  useEffect(() => {
+    if (!session) {
+      setShowNotice(false);
+      return;
+    }
+    const token = session.token;
+    if (wasNoticeShown(token)) return;
+    const isPreview = session.user.username.toLowerCase() === PREVIEW_USERNAME;
+    if (isPreview) {
+      setShowNotice(true);
+      return;
+    }
+    let cancelled = false;
+    fetchGymNotice()
+      .then((result) => {
+        if (cancelled || !result.active) return;
+        setShowNotice(true);
+        void markGymNoticeSeen();
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [session]);
 
   async function handleLogin(username: string, password: string) {
     setIsLoggingIn(true);
@@ -38,7 +84,7 @@ export function GymApp() {
   function handleLogout() {
     void logoutGym();
     clearGymSession();
-    setNoticeAccepted(false);
+    setShowNotice(false);
     setSession(null);
   }
 
@@ -48,22 +94,9 @@ export function GymApp() {
     setLoginError("Tu sesión venció. Volvé a iniciar sesión.");
   }
 
-  // Aviso de servicio vencido solo para el usuario "alegym"; una vez aceptado
-  // queda guardado en este navegador y no vuelve a salir.
-  const noticeKey = session ? `frontend-gym.service-expired-accepted.${session.user.username.toLowerCase()}` : "";
-  const isNoticeUser = session?.user.username.toLowerCase() === "alegym";
-  // "vistaprevia" es un usuario de prueba para ver el cartel: le sale en
-  // cada ingreso (no se recuerda que lo aceptó).
-  const isPreviewUser = session?.user.username.toLowerCase() === "vistaprevia";
-  const showNotice = !noticeAccepted && (isPreviewUser || (isNoticeUser && !readNoticeAccepted(noticeKey)));
-
-  function handleAcceptNotice() {
-    try {
-      if (!isPreviewUser) localStorage.setItem(noticeKey, "1");
-    } catch {
-      // Si el navegador no deja guardar, al menos se cierra en esta visita.
-    }
-    setNoticeAccepted(true);
+  function handleCloseNotice() {
+    if (session) rememberNoticeShown(session.token);
+    setShowNotice(false);
   }
 
   if (!session) {
@@ -78,13 +111,13 @@ export function GymApp() {
 
   return (
     <>
+      {showNotice && <ServiceExpiredNotice onClose={handleCloseNotice} />}
       <GymHomePage
         userName={session.user.fullName ?? session.user.username}
         workspaceKey={session.user.workspaceKey}
         onLogout={handleLogout}
         onSessionExpired={handleSessionExpired}
       />
-      {showNotice && <ServiceExpiredNotice onAccept={handleAcceptNotice} />}
     </>
   );
 }
