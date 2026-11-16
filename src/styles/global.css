@@ -182,9 +182,20 @@ button {
   gap: 8px;
   padding: 16px 24px 0;
   border-bottom: 1px solid var(--color-border);
+  /* Con 7 pestañas no entran en un celular: se deslizan dentro de la barra en
+     vez de ensanchar toda la pagina (eso descentraba los avisos y modales). */
+  overflow-x: auto;
+  max-width: 100%;
+  scrollbar-width: none;
+}
+
+.gym-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .gym-tab-button {
+  flex: none;
+  white-space: nowrap;
   border: none;
   background: transparent;
   color: var(--color-muted);
