@@ -18,12 +18,14 @@ import { GymSummarySection } from "./components/GymSummarySection";
 import { GymStudentsSection, type GymStudentInput } from "./components/GymStudentsSection";
 import { GymCheckInSection } from "./components/GymCheckInSection";
 import { GymShopSection } from "./components/GymShopSection";
+import { GymBookingAdminSection } from "../booking/GymBookingAdminSection";
 import { GymProgressSection, type GymProgressInput } from "./components/GymProgressSection";
 
-type GymTab = "alumnos" | "progreso" | "gastos" | "tienda" | "resumen" | "ingresar";
+type GymTab = "alumnos" | "turnos" | "progreso" | "gastos" | "tienda" | "resumen" | "ingresar";
 
 const TAB_LABELS: Record<GymTab, string> = {
   alumnos: "Alumnos",
+  turnos: "Turnos",
   progreso: "Mi Progreso",
   gastos: "Gastos",
   tienda: "Tienda",
@@ -480,6 +482,7 @@ export function GymHomePage({ userName, workspaceKey, onLogout, onSessionExpired
             workspaceKey={workspaceKey}
           />
         ) : null}
+        {tab === "turnos" ? <GymBookingAdminSection /> : null}
         {tab === "progreso" ? (
           <GymProgressSection
             students={data.students}
