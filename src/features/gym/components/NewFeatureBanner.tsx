@@ -3,7 +3,7 @@ import { useState } from "react";
 // Aviso de "funcionalidad nueva" (16/11/2026): modal que cubre la pantalla al
 // entrar, con un solo boton "Aceptar". Al aceptar queda guardado en este
 // navegador y no vuelve a salir.
-const STORAGE_KEY = "frontend-gym.banner.turnos.v1";
+const STORAGE_KEY = "frontend-gym.banner.turnos.v2";
 
 function wasClosed() {
   try {
