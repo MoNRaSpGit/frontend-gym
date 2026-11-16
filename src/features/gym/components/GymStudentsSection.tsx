@@ -1,4 +1,3 @@
-import { NewFeatureBanner } from "./NewFeatureBanner";
 import { useMemo, useState } from "react";
 import {
   addMonths,
@@ -243,9 +242,6 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
           </button>
         ) : null}
       </div>
-
-      {/* Aviso de la funcionalidad de turnos (16/11/2026): abajo del buscador, solo Ale Gym. */}
-      {workspaceKey === "alegym" ? <NewFeatureBanner /> : null}
 
       {isFormOpen ? (
         <form className="gym-student-form" onSubmit={handleSubmit}>
