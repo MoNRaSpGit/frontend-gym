@@ -1381,16 +1381,15 @@ button {
 
 /* Cartelito de funcionalidad nueva (16/11/2026): finito, de una o dos lineas. */
 .gym-feature-bar {
-  position: sticky;
-  top: 0;
-  z-index: 999;
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: env(safe-area-inset-top) 4px 0 12px;
+  margin: 0 0 12px;
+  padding: 0 4px 0 12px;
   background: #dff3e6;
   color: #143d24;
-  border-bottom: 1px solid #8cc9a2;
+  border: 1px solid #8cc9a2;
+  border-radius: 10px;
 }
 
 .gym-feature-text {

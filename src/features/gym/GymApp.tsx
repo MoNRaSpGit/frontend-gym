@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { fetchGymNotice, loginGym, logoutGym, markGymNoticeSeen } from "./gym.client";
 import { GymHomePage } from "./GymHomePage";
 import { GymLoginScreen } from "./components/GymLoginScreen";
-import { NewFeatureBanner } from "./components/NewFeatureBanner";
 import { ServiceExpiredNotice } from "./components/ServiceExpiredNotice";
 import { clearGymSession, loadGymSession, saveGymSession, type GymSession } from "./gym.session";
 
@@ -113,8 +112,6 @@ export function GymApp() {
   return (
     <>
       {showNotice && <ServiceExpiredNotice onClose={handleCloseNotice} />}
-      {/* Aviso de la funcionalidad de turnos: solo para el gimnasio de Ale. */}
-      {session.user.workspaceKey === "alegym" ? <NewFeatureBanner /> : null}
       <GymHomePage
         userName={session.user.fullName ?? session.user.username}
         workspaceKey={session.user.workspaceKey}
