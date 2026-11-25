@@ -1585,3 +1585,92 @@ button {
       "extra extra";
   }
 }
+
+/* Orden de la ficha abierta (24/11/2026, 2da vuelta de estetica) */
+.gym-student-card--open .gym-student-actions > .gym-ghost-button--danger {
+  margin-left: auto;
+}
+
+.gym-student-activities {
+  gap: 12px;
+  padding: 16px;
+  background: color-mix(in srgb, var(--color-accent) 5%, var(--color-surface-alt));
+  border-color: color-mix(in srgb, var(--color-accent) 25%, var(--color-border));
+}
+
+.gym-student-activities > strong {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.gym-activity-form {
+  grid-template-columns: 1.4fr 1fr 1.2fr 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.gym-activity-form label {
+  min-width: 0;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.gym-activity-form input,
+.gym-activity-form select {
+  width: 100%;
+  min-width: 0;
+  height: 42px;
+  box-sizing: border-box;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.gym-activity-form > button {
+  grid-column: 1 / -1;
+  justify-self: end;
+  min-width: 160px;
+}
+
+@media (max-width: 560px) {
+  .gym-activity-form {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .gym-activity-form label:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .gym-activity-form > button {
+    justify-self: stretch;
+    height: 46px;
+  }
+
+  .gym-student-card--open .gym-student-actions > .gym-ghost-button--danger {
+    margin-left: 0;
+  }
+}
+
+/* Pestana Actividades: dia + totales en una sola fila */
+.gym-activity-detail {
+  grid-template-columns: 1fr;
+}
+
+.gym-activity-date {
+  max-width: none;
+}
+
+.gym-activity-date input {
+  width: 100%;
+  max-width: 240px;
+  height: 42px;
+}
+
+.gym-activity-tile {
+  min-height: 74px;
+}
