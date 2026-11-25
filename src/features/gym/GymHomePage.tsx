@@ -5,6 +5,7 @@ import { addExpenseInterval, computeExpenseAfterPayment, generateId, getRenewedD
 import type {
   GymAuditAction,
   GymAuditEntry,
+  GymActivity,
   GymCheckIn,
   GymExpense,
   GymMovement,
@@ -19,12 +20,14 @@ import { GymStudentsSection, type GymStudentInput } from "./components/GymStuden
 import { GymCheckInSection } from "./components/GymCheckInSection";
 import { GymShopSection } from "./components/GymShopSection";
 import { GymBookingAdminSection } from "../booking/GymBookingAdminSection";
+import { GymActivitiesSection } from "./components/GymActivitiesSection";
 import { GymProgressSection, type GymProgressInput } from "./components/GymProgressSection";
 
-type GymTab = "alumnos" | "turnos" | "progreso" | "gastos" | "tienda" | "resumen" | "ingresar";
+type GymTab = "alumnos" | "actividades" | "turnos" | "progreso" | "gastos" | "tienda" | "resumen" | "ingresar";
 
 const TAB_LABELS: Record<GymTab, string> = {
   alumnos: "Alumnos",
+  actividades: "Actividades",
   turnos: "Turnos",
   progreso: "Mi Progreso",
   gastos: "Gastos",
@@ -33,7 +36,7 @@ const TAB_LABELS: Record<GymTab, string> = {
   ingresar: "Ingresar"
 };
 
-const EMPTY_DATA: GymWorkspaceData = { expenses: [], movements: [], students: [], checkIns: [], progressRecords: [], auditLog: [] };
+const EMPTY_DATA: GymWorkspaceData = { expenses: [], movements: [], students: [], checkIns: [], progressRecords: [], activities: [], auditLog: [] };
 
 // Workspaces guardados antes de Alumnos / Ingresar / Mi Progreso no traen
 // esos campos: se completan vacios al cargar.
@@ -42,7 +45,8 @@ function withDefaults(data: GymWorkspaceData): GymWorkspaceData {
     ...data,
     students: data.students ?? [],
     checkIns: data.checkIns ?? [],
-    progressRecords: data.progressRecords ?? []
+    progressRecords: data.progressRecords ?? [],
+    activities: data.activities ?? []
   };
 }
 
@@ -264,6 +268,62 @@ export function GymHomePage({ userName, workspaceKey, onLogout, onSessionExpired
     }));
   }
 
+  // Actividades (24/11/2026): catalogo (alta/edicion/baja) y cobro por vez.
+  // Borrar una actividad del catalogo NO borra los cobros ya registrados:
+  // cada cobro guarda el nombre de la actividad.
+  function handleSaveActivity(input: { id?: string; name: string; price: number }) {
+    setData((current) => {
+      const activities = input.id
+        ? current.activities.map((item) => (item.id === input.id ? { ...item, name: input.name, price: input.price } : item))
+        : [...current.activities, { id: generateId("act"), name: input.name, price: input.price } satisfies GymActivity];
+      return {
+        ...current,
+        activities,
+        auditLog: [addAudit("movement_created", `Actividad ${input.id ? "editada" : "creada"}: ${input.name}`), ...current.auditLog]
+      };
+    });
+  }
+
+  function handleDeleteActivity(activityId: string) {
+    setData((current) => ({
+      ...current,
+      activities: current.activities.filter((item) => item.id !== activityId),
+      auditLog: [addAudit("movement_deleted", "Actividad borrada del catalogo"), ...current.auditLog]
+    }));
+  }
+
+  function handleRegisterActivity(input: {
+    studentId: string;
+    activityId: string;
+    amount: number;
+    date: string;
+    time: string;
+  }) {
+    setData((current) => {
+      const activity = current.activities.find((item) => item.id === input.activityId);
+      const student = current.students.find((item) => item.id === input.studentId);
+      if (!activity || !student) return current;
+      const movement: GymMovement = {
+        id: generateId("mov"),
+        date: input.date,
+        type: "actividad",
+        amount: input.amount,
+        note: `${activity.name} · ${student.name}`,
+        createdAt: new Date().toISOString(),
+        studentId: student.id,
+        studentName: student.name,
+        activityId: activity.id,
+        activityName: activity.name,
+        time: input.time
+      };
+      return {
+        ...current,
+        movements: [movement, ...current.movements],
+        auditLog: [addAudit("movement_created", `Actividad: ${activity.name} · ${student.name}`), ...current.auditLog]
+      };
+    });
+  }
+
   function handleDeleteMovement(movementId: string) {
     setData((current) => ({
       ...current,
@@ -480,6 +540,17 @@ export function GymHomePage({ userName, workspaceKey, onLogout, onSessionExpired
             onRenew={handleRenewStudent}
             onDelete={handleDeleteStudent}
             workspaceKey={workspaceKey}
+            activities={data.activities}
+            onRegisterActivity={handleRegisterActivity}
+          />
+        ) : null}
+        {tab === "actividades" ? (
+          <GymActivitiesSection
+            activities={data.activities}
+            movements={data.movements}
+            onSave={handleSaveActivity}
+            onDelete={handleDeleteActivity}
+            onDeleteMovement={handleDeleteMovement}
           />
         ) : null}
         {tab === "turnos" ? <GymBookingAdminSection /> : null}

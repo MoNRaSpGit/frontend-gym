@@ -12,7 +12,16 @@ export type GymExpense = {
 // no solo la mensualidad -- suplementos, calzas, etc.") es income igual
 // que "cobro", pero se carga desde la pestana Tienda y se reporta
 // separado en el resumen para no mezclarlo con las cuotas.
-export type GymMovementType = "cobro" | "gasto" | "cliente_nuevo" | "producto" | "otro";
+export type GymMovementType = "cobro" | "gasto" | "cliente_nuevo" | "producto" | "actividad" | "otro";
+
+// Actividad suelta (24/11/2026, pedido explicito): Zumba y similares NO son
+// un plan -- se cobra por vez. El catalogo lo arma el cliente en la pestana
+// Actividades; cada cobro es un movimiento tipo "actividad".
+export type GymActivity = {
+  id: string;
+  name: string;
+  price: number;
+};
 
 export type GymMovement = {
   id: string;
@@ -27,6 +36,11 @@ export type GymMovement = {
   // perderse el dato de "a este no le mande nada todavia".
   studentId?: string;
   invoiceSent?: boolean;
+  // Solo para "actividad": cual actividad y a que hora (texto libre, ej. 19:00).
+  studentName?: string;
+  activityId?: string;
+  activityName?: string;
+  time?: string;
 };
 
 export type GymStudentPlan = "mensual" | "trimestral" | "semestral" | "anual";
@@ -140,6 +154,7 @@ export type GymWorkspaceData = {
   students: GymStudent[];
   checkIns: GymCheckIn[];
   progressRecords: GymProgressRecord[];
+  activities: GymActivity[];
   auditLog: GymAuditEntry[];
 };
 
@@ -154,6 +169,7 @@ export const GYM_MOVEMENT_TYPE_LABELS: Record<GymMovementType, string> = {
   gasto: "Gasto",
   cliente_nuevo: "Cliente nuevo",
   producto: "Venta de producto",
+  actividad: "Actividad",
   otro: "Otro"
 };
 

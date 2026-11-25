@@ -1445,3 +1445,143 @@ button {
   font-weight: 700;
   cursor: pointer;
 }
+
+/* Ficha de alumno que se agranda (24/11/2026) y Actividades */
+.gym-student-card {
+  cursor: pointer;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.gym-student-card:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
+}
+
+.gym-student-card--open {
+  grid-template-areas:
+    "avatar info due"
+    "avatar actions actions"
+    "avatar extra extra";
+  cursor: default;
+  border-color: var(--color-accent);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+  padding-bottom: 18px;
+}
+
+.gym-student-chevron {
+  color: var(--color-muted);
+  font-size: 14px;
+}
+
+.gym-student-card--open .gym-student-actions {
+  padding-top: 10px;
+  border-top: 1px solid var(--color-border);
+}
+
+.gym-student-card--open .gym-student-actions > .gym-primary-button--small,
+.gym-student-card--open .gym-student-actions > .gym-ghost-button,
+.gym-student-card--open .gym-student-actions > .gym-whatsapp-button {
+  padding: 9px 16px;
+  font-size: 14px;
+}
+
+.gym-student-activities {
+  grid-area: extra;
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface-alt);
+}
+
+.gym-activity-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  align-items: end;
+}
+
+.gym-activity-form label,
+.gym-activity-date {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+.gym-activity-form input,
+.gym-activity-form select,
+.gym-activity-date input,
+.gym-activity-edit input {
+  padding: 9px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+}
+
+.gym-activity-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 10px;
+}
+
+.gym-activity-tile {
+  display: grid;
+  gap: 4px;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.gym-activity-tile--active {
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 10%, var(--color-surface));
+}
+
+.gym-activity-detail {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.gym-activity-detail-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.gym-activity-detail-head h3 {
+  margin: 0;
+}
+
+.gym-activity-detail-actions,
+.gym-activity-edit {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.gym-activity-date {
+  max-width: 220px;
+}
+
+@media (max-width: 560px) {
+  .gym-student-card--open {
+    grid-template-areas:
+      "avatar info"
+      "due due"
+      "actions actions"
+      "extra extra";
+  }
+}

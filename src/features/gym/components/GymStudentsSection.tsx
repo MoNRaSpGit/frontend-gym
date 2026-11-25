@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { toast } from "react-toastify";
 import {
   addMonths,
   buildOverdueFeeMessage,
@@ -18,6 +19,7 @@ import {
   GYM_STUDENT_CATEGORY_LABELS,
   GYM_STUDENT_PLAN_LABELS,
   GYM_STUDENT_PLAN_MONTHS,
+  type GymActivity,
   type GymStudent,
   type GymStudentCategory,
   type GymStudentPlan
@@ -43,6 +45,9 @@ type GymStudentsSectionProps = {
   // si se muestra "Enviar factura" como que categorias se ofrecen
   // (27/10/2026, pedido explicito -- cada uno tiene las suyas).
   workspaceKey: string;
+  // Actividades sueltas (Zumba, etc.): se cobran desde la ficha del alumno.
+  activities: GymActivity[];
+  onRegisterActivity: (input: { studentId: string; activityId: string; amount: number; date: string; time: string }) => void;
 };
 
 type StatusFilter = "all" | StudentStatus;
@@ -86,7 +91,16 @@ function emptyForm(): FormState {
   };
 }
 
-export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDelete, workspaceKey }: GymStudentsSectionProps) {
+export function GymStudentsSection({
+  students,
+  onCreate,
+  onUpdate,
+  onRenew,
+  onDelete,
+  workspaceKey,
+  activities,
+  onRegisterActivity
+}: GymStudentsSectionProps) {
   // "Enviar factura" (28/10/2026 Pablo, 29/10/2026 Ale): ya no es un
   // boton aparte (apretaba mucho en celular) -- ahora se pregunta al
   // renovar, ver el flujo de "confirming" mas abajo.
@@ -106,6 +120,36 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
   const [confirming, setConfirming] = useState<{ id: string; action: "renew" | "renew-invoice" | "delete" } | null>(
     null
   );
+
+  // Ficha expandida (24/11/2026, pedido explicito): la tarjeta queda con lo
+  // basico y al tocarla se agranda con todos los botones + Actividades.
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [actForm, setActForm] = useState({ activityId: "", amount: "", date: getTodayDate(), time: "" });
+
+  function toggleExpanded(studentId: string) {
+    if (expandedId === studentId) {
+      setExpandedId(null);
+      setConfirming(null);
+      return;
+    }
+    const first = activities[0];
+    setActForm({ activityId: first?.id ?? "", amount: first ? String(first.price) : "", date: getTodayDate(), time: "" });
+    setConfirming(null);
+    setExpandedId(studentId);
+  }
+
+  function handleRegisterActivity(event: React.FormEvent<HTMLFormElement>, student: GymStudent) {
+    event.preventDefault();
+    const activity = activities.find((item) => item.id === actForm.activityId);
+    const amount = Number(actForm.amount.replace(",", "."));
+    if (!activity || !Number.isFinite(amount) || amount < 0 || !actForm.date) {
+      toast.error("Revisá la actividad, el monto y el día.");
+      return;
+    }
+    onRegisterActivity({ studentId: student.id, activityId: activity.id, amount, date: actForm.date, time: actForm.time.trim() });
+    toast.success(`${activity.name} registrada para ${student.name}`);
+    setActForm((current) => ({ ...current, time: "" }));
+  }
 
   function finishRenew(studentId: string, sendInvoice: boolean) {
     onRenew(studentId, sendInvoice);
@@ -412,9 +456,17 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
             const isConfirmingRenew = confirming?.id === student.id && confirming.action === "renew";
             const isConfirmingInvoice = confirming?.id === student.id && confirming.action === "renew-invoice";
             const isConfirmingDelete = confirming?.id === student.id && confirming.action === "delete";
+            const isExpanded = expandedId === student.id;
 
             return (
-              <div key={student.id} className={`gym-student-card gym-student-card--${status}`}>
+              <div
+                key={student.id}
+                className={`gym-student-card gym-student-card--${status} ${isExpanded ? "gym-student-card--open" : ""}`}
+                onClick={(event) => {
+                  if ((event.target as HTMLElement).closest("button, a, input, select, label, form")) return;
+                  toggleExpanded(student.id);
+                }}
+              >
                 <div className="gym-student-avatar">{student.name.charAt(0).toUpperCase()}</div>
 
                 <div className="gym-student-info">
@@ -433,8 +485,12 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
                 <div className="gym-student-due">
                   <span className={`gym-due-pill gym-due-pill--${status}`}>vence {formatShortDate(student.dueDate)}</span>
                   <span className="gym-hint">{describeDaysLeft(daysLeft)}</span>
+                  <span className="gym-student-chevron" aria-hidden="true">
+                    {isExpanded ? "▴" : "▾"}
+                  </span>
                 </div>
 
+                {isExpanded ? (
                 <div className="gym-student-actions">
                   {isConfirmingRenew ? (
                     <div className="gym-confirm">
@@ -522,6 +578,50 @@ export function GymStudentsSection({ students, onCreate, onUpdate, onRenew, onDe
                     </a>
                   ) : null}
                 </div>
+                ) : null}
+
+                {isExpanded ? (
+                  <div className="gym-student-activities">
+                    <strong>Actividades</strong>
+                    {activities.length === 0 ? (
+                      <span className="gym-hint">Todavía no hay actividades. Creálas en la pestaña Actividades.</span>
+                    ) : (
+                      <form className="gym-activity-form" onSubmit={(event) => handleRegisterActivity(event, student)}>
+                        <label>
+                          <span>Actividad</span>
+                          <select
+                            value={actForm.activityId}
+                            onChange={(event) => {
+                              const activity = activities.find((item) => item.id === event.target.value);
+                              setActForm((current) => ({ ...current, activityId: event.target.value, amount: activity ? String(activity.price) : current.amount }));
+                            }}
+                          >
+                            {activities.map((activity) => (
+                              <option key={activity.id} value={activity.id}>
+                                {activity.name}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <label>
+                          <span>Monto</span>
+                          <input type="text" inputMode="decimal" value={actForm.amount} onChange={(event) => setActForm((current) => ({ ...current, amount: event.target.value }))} />
+                        </label>
+                        <label>
+                          <span>Día</span>
+                          <input type="date" value={actForm.date} onChange={(event) => setActForm((current) => ({ ...current, date: event.target.value }))} />
+                        </label>
+                        <label>
+                          <span>Hora</span>
+                          <input type="text" placeholder="Ej: 19:00" value={actForm.time} onChange={(event) => setActForm((current) => ({ ...current, time: event.target.value }))} />
+                        </label>
+                        <button type="submit" className="gym-primary-button">
+                          Registrar
+                        </button>
+                      </form>
+                    )}
+                  </div>
+                ) : null}
               </div>
             );
           })

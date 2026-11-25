@@ -47,7 +47,7 @@ function formatMonthLabel(key: string) {
 // pedido explicito (09/10/2026): "lo que es como un ingreso en verde, lo
 // que es como un gasto en rojo, para asimilar rapido".
 function movementColorClass(type: GymMovement["type"]) {
-  if (type === "cobro" || type === "producto") return "gym-movement-row--ingreso";
+  if (type === "cobro" || type === "producto" || type === "actividad") return "gym-movement-row--ingreso";
   if (type === "gasto") return "gym-movement-row--gasto";
   return "";
 }
@@ -84,7 +84,11 @@ export function GymSummarySection({
   const ingresosProductos = monthMovements
     .filter((movement) => movement.type === "producto")
     .reduce((sum, movement) => sum + (movement.amount ?? 0), 0);
-  const ingresos = ingresosCuotas + ingresosProductos;
+  // "actividad" (Zumba, etc.): se cobra por vez, tambien suma a ingresos.
+  const ingresosActividades = monthMovements
+    .filter((movement) => movement.type === "actividad")
+    .reduce((sum, movement) => sum + (movement.amount ?? 0), 0);
+  const ingresos = ingresosCuotas + ingresosProductos + ingresosActividades;
   const egresos = monthMovements
     .filter((movement) => movement.type === "gasto")
     .reduce((sum, movement) => sum + (movement.amount ?? 0), 0);
@@ -92,7 +96,7 @@ export function GymSummarySection({
   const monthlyHistory = useMemo((): GymMonthHistoryItem[] => {
     const totalsByMonth = new Map<string, number>();
     for (const movement of movements) {
-      if (movement.type !== "cobro" && movement.type !== "gasto" && movement.type !== "producto") continue;
+      if (movement.type !== "cobro" && movement.type !== "gasto" && movement.type !== "producto" && movement.type !== "actividad") continue;
       const key = getYearMonth(movement.date);
       const signed = movement.type === "gasto" ? -(movement.amount ?? 0) : movement.amount ?? 0;
       totalsByMonth.set(key, (totalsByMonth.get(key) ?? 0) + signed);
@@ -185,6 +189,10 @@ export function GymSummarySection({
         <div className="gym-summary-card gym-summary-card--tienda">
           <span className="gym-hint">Tienda del mes</span>
           <strong>{formatMoney(ingresosProductos)}</strong>
+        </div>
+        <div className="gym-summary-card gym-summary-card--tienda">
+          <span className="gym-hint">Actividades del mes</span>
+          <strong>{formatMoney(ingresosActividades)}</strong>
         </div>
         <div
           className="gym-summary-card gym-summary-card--egresos gym-summary-card--clickable"
