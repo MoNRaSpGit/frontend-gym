@@ -59,6 +59,11 @@ export function GymActivitiesSection({ activities, movements, onSave, onDelete, 
   }
 
   function openActivity(activity: GymActivity) {
+    // Segundo toque sobre la misma actividad: se pliega la lista.
+    if (activity.id === selectedId) {
+      setSelectedId(null);
+      return;
+    }
     setSelectedId(activity.id);
     setDate(getTodayDate());
     setEditing(false);

@@ -63,9 +63,7 @@ export function AppUpdateNotice() {
         // progreso (no hay nadie mirando). Si hay alguien, se le muestra
         // el cartel y decide el cuando con el boton "Actualizar".
         if (isAppIdle()) {
-          appliedRef.current = true;
-          await clearAppCache();
-          window.location.reload();
+          runUpdate();
           return;
         }
 
@@ -82,8 +80,7 @@ export function AppUpdateNotice() {
 
     const idleRetryId = window.setInterval(() => {
       if (show && !appliedRef.current && isAppIdle()) {
-        appliedRef.current = true;
-        void clearAppCache().then(() => window.location.reload());
+        runUpdate();
       }
     }, IDLE_RETRY_INTERVAL_MS);
 
@@ -108,7 +105,7 @@ export function AppUpdateNotice() {
   // Boton "Actualizar" tocado a mano: pantalla de progreso que toma toda
   // la pantalla, igual que frontend-distribuidora, y recien al llegar a
   // 100% (y con la limpieza real ya terminada) recarga.
-  function handleUpdate() {
+  function runUpdate() {
     if (progress !== null) return;
     appliedRef.current = true;
     setProgress(0);
@@ -127,11 +124,13 @@ export function AppUpdateNotice() {
     }, PROGRESS_TICK_MS);
   }
 
+  const handleUpdate = runUpdate;
+
   if (progress !== null) {
     return (
       <div className="update-overlay" role="status" aria-live="polite">
         <div className="update-overlay-card">
-          <img src={`${import.meta.env.BASE_URL}icon-192.png`} alt="" />
+          <img src={`${import.meta.env.BASE_URL}LogoLogicLab.png`} alt="Logic Lab" />
           <strong>{progress < 100 ? "Actualizando la aplicación…" : "¡Listo!"}</strong>
           <div className="update-progress" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}>
             <div className="update-progress-fill" style={{ width: `${progress}%` }} />

@@ -1173,12 +1173,12 @@ button {
 .update-overlay {
   position: fixed;
   inset: 0;
-  z-index: 40;
+  z-index: 70;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: var(--color-accent-dark);
+  background: #000;
   color: #fff;
 }
 
@@ -1192,10 +1192,10 @@ button {
 }
 
 .update-overlay-card img {
-  width: 72px;
-  height: 72px;
-  border-radius: 18px;
-  border: 2px solid rgba(255, 255, 255, 0.4);
+  width: auto;
+  height: min(52vh, 420px);
+  max-width: 100%;
+  border-radius: 12px;
 }
 
 .update-overlay-card strong {

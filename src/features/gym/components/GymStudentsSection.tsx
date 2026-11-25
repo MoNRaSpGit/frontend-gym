@@ -91,6 +91,12 @@ function emptyForm(): FormState {
   };
 }
 
+// Hora tipeada de corrido: "1900" pasa a "19:00" (25/11/2026, pedido explicito).
+function formatTimeInput(raw: string): string {
+  const digits = raw.replace(/D/g, "").slice(0, 4);
+  return digits.length <= 2 ? digits : `${digits.slice(0, 2)}:${digits.slice(2)}`;
+}
+
 export function GymStudentsSection({
   students,
   onCreate,
@@ -613,7 +619,7 @@ export function GymStudentsSection({
                         </label>
                         <label>
                           <span>Hora</span>
-                          <input type="text" placeholder="Ej: 19:00" value={actForm.time} onChange={(event) => setActForm((current) => ({ ...current, time: event.target.value }))} />
+                          <input type="text" inputMode="numeric" maxLength={5} placeholder="Ej: 19:00" value={actForm.time} onChange={(event) => setActForm((current) => ({ ...current, time: formatTimeInput(event.target.value) }))} />
                         </label>
                         <button type="submit" className="gym-primary-button">
                           Registrar
