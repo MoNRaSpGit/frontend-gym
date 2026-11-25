@@ -91,10 +91,22 @@ function emptyForm(): FormState {
   };
 }
 
-// Hora tipeada de corrido: "1900" pasa a "19:00" (25/11/2026, pedido explicito).
-function formatTimeInput(raw: string): string {
-  const digits = raw.replace(/D/g, "").slice(0, 4);
-  return digits.length <= 2 ? digits : `${digits.slice(0, 2)}:${digits.slice(2)}`;
+// Hora en dos cajitas (hora y minutos). Se guarda como "HH:MM" (25/11/2026).
+function timePart(time: string, index: 0 | 1): string {
+  return time.split(":")[index] ?? "";
+}
+
+function joinTime(hours: string, minutes: string): string {
+  const h = hours.replace(/[^0-9]/g, "").slice(0, 2);
+  const m = minutes.replace(/[^0-9]/g, "").slice(0, 2);
+  return h === "" && m === "" ? "" : `${h}:${m}`;
+}
+
+function normalizeTime(time: string): string {
+  const h = timePart(time, 0);
+  const m = timePart(time, 1);
+  if (h === "") return "";
+  return `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
 }
 
 export function GymStudentsSection({
@@ -152,7 +164,7 @@ export function GymStudentsSection({
       toast.error("Revisá la actividad, el monto y el día.");
       return;
     }
-    onRegisterActivity({ studentId: student.id, activityId: activity.id, amount, date: actForm.date, time: actForm.time.trim() });
+    onRegisterActivity({ studentId: student.id, activityId: activity.id, amount, date: actForm.date, time: normalizeTime(actForm.time) });
     toast.success(`${activity.name} registrada para ${student.name}`);
     setActForm((current) => ({ ...current, time: "" }));
   }
@@ -617,10 +629,14 @@ export function GymStudentsSection({
                           <span>Día</span>
                           <input type="date" value={actForm.date} onChange={(event) => setActForm((current) => ({ ...current, date: event.target.value }))} />
                         </label>
-                        <label>
+                        <div className="gym-time-field">
                           <span>Hora</span>
-                          <input type="text" inputMode="numeric" maxLength={5} placeholder="Ej: 19:00" value={actForm.time} onChange={(event) => setActForm((current) => ({ ...current, time: formatTimeInput(event.target.value) }))} />
-                        </label>
+                          <div className="gym-time-boxes">
+                            <input type="text" inputMode="numeric" maxLength={2} placeholder="19" aria-label="Hora" value={timePart(actForm.time, 0)} onChange={(event) => setActForm((current) => ({ ...current, time: joinTime(event.target.value, timePart(current.time, 1)) }))} />
+                            <b>:</b>
+                            <input type="text" inputMode="numeric" maxLength={2} placeholder="30" aria-label="Minutos" value={timePart(actForm.time, 1)} onChange={(event) => setActForm((current) => ({ ...current, time: joinTime(timePart(current.time, 0), event.target.value) }))} />
+                          </div>
+                        </div>
                         <button type="submit" className="gym-primary-button">
                           Registrar
                         </button>

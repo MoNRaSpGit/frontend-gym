@@ -1674,3 +1674,10 @@ button {
 .gym-activity-tile {
   min-height: 74px;
 }
+
+/* Hora en dos cajitas */
+.gym-time-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.gym-time-field > span { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.75; }
+.gym-time-boxes { display: flex; align-items: center; gap: 6px; }
+.gym-time-boxes input { width: 100%; min-width: 0; text-align: center; }
+.gym-time-boxes b { font-size: 18px; }
